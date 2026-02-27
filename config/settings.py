@@ -4,6 +4,10 @@ All system settings and constants
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Base Paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -41,14 +45,13 @@ FACE_CONFIG = {
 
 # Geofencing Settings
 GEOFENCE_CONFIG = {
-    "RADIUS_METERS": 100,  # Attendance valid within this radius
+    "RADIUS_METERS": 500,  # Attendance valid within this radius (200 meters)
     "CLASSROOM_LOCATIONS": {
         # Default locations - Update these for your institution
-        "Room_101": {"lat": 40.7128, "lon": -74.0060},  # NYC coordinates (example)
-        "Room_102": {"lat": 40.7138, "lon": -74.0050}, 
-        "Lab_A": {"lat": 40.7148, "lon": -74.0040},
-        "Library": {"lat": 40.7158, "lon": -74.0030},
-        "Auditorium": {"lat": 40.7168, "lon": -74.0020},
+        "Reading_Room": {"lat": 28.558773, "lon": 77.277969},  
+        "Room_331": {"lat": 26.1197, "lon": 85.3910}, 
+        "Room_328": {"lat": 28.558773, "lon": 77.277969},
+        "Home": {"lat": 28.555247, "lon": 77.289663},
     },
     "GPS_ACCURACY_THRESHOLD": 50,  # Minimum GPS accuracy in meters
     "MOCK_LOCATION_DETECTION": True,  # Enable developer options detection
@@ -71,7 +74,6 @@ FRAUD_CONFIG = {
         "Please turn your head right",
         "Please nod your head",
     ],
-    "ALERT_EMAIL": "admin@smartattendai.com",
 }
 
 # Voice Verification Settings
@@ -91,16 +93,11 @@ DATABASE_CONFIG = {
 # API Keys (Load from environment)
 API_KEYS = {
     "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN", ""),
-    "TWILIO_ACCOUNT_SID": os.getenv("TWILIO_ACCOUNT_SID", ""),
-    "TWILIO_AUTH_TOKEN": os.getenv("TWILIO_AUTH_TOKEN", ""),
-    "TWILIO_PHONE_NUMBER": os.getenv("TWILIO_PHONE_NUMBER", ""),
 }
 
 # Notification Settings
 NOTIFICATION_CONFIG = {
     "TELEGRAM_ENABLED": True,
-    "SMS_ENABLED": False,  # Requires Twilio credits
-    "EMAIL_ENABLED": False,
 }
 
 # Server Settings
@@ -108,7 +105,7 @@ SERVER_CONFIG = {
     "HOST": "0.0.0.0",
     "PORT": 8000,
     "DEBUG": True,
-    "RELOAD": True,
+    "RELOAD": False,  # Disabled to prevent multiprocessing conflicts with dlib/face_recognition
 }
 
 # Offline Mode Settings

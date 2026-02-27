@@ -31,8 +31,6 @@ DATABASE_URL=sqlite:///./data/attendance.db
 
 # API Keys (Add your actual keys here)
 TELEGRAM_BOT_TOKEN=your_telegram_token
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
 """)
 
 print("Development environment configured!")

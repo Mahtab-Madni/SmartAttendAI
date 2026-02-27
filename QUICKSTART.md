@@ -1,66 +1,114 @@
 # SmartAttendAI - Quick Start Guide
 
-## 🚀 Get Started in 5 Minutes
+## Getting Started (5 Minutes)
 
-### Step 1: Installation (2 minutes)
+### 1. Install Dependencies
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/SmartAttendAI.git
-cd SmartAttendAI
-
-# Run automated setup
-python setup.py
+cd c:\Users\mahta\OneDrive\Desktop\SmartAttendAI
+pip install dlib opencv-python scipy imutils face_recognition
 ```
 
-The setup script will:
-- ✅ Check Python version
-- ✅ Create directory structure
-- ✅ Install all dependencies
-- ✅ Download required AI models
-- ✅ Initialize database
-- ✅ Create configuration templates
+### 2. Start the Server
 
-### Step 2: Configuration (1 minute)
-
-Edit `.env` file with your credentials:
-
-```env
-# Optional: For notifications
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
+```bash
+python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Note**: Notifications are optional. The system works without them!
+✅ Server running: `http://localhost:8000`
 
-### Step 3: Register Students (2 minutes)
+---
 
-#### Option A: Single Student
-```python
-from src.face_recognition.recognizer import FaceRecognitionSystem
-from config.settings import FACE_CONFIG
+## Using the Attendance System
 
-face_system = FaceRecognitionSystem(FACE_CONFIG)
+### Access the Attendance Page
 
-face_system.register_face(
-    image_path="path/to/photo.jpg",
-    student_name="John Doe",
-    student_id="STU001",
-    roll_number="22001",
-    email="john@example.com",
-    phone="+1234567890"
-)
 ```
+http://localhost:8000/mark-attendance
+```
+
+### Complete Verification Flow (6 Steps)
+
+#### **Step 1: Select Student & Get GPS**
+
+1. Click "Get GPS Location"
+2. Allow browser location access
+3. Confirm location shows: Latitude, Longitude, Accuracy
+
+#### **Step 2: Capture Face**
+
+1. Click "Start Camera" (allow camera permissions)
+2. Position face in center
+3. Click "Capture Face"
+
+#### **Step 3: Liveness Check** (5 seconds)
+
+1. Click "Start Liveness Check"
+2. Look naturally at camera for 5 seconds
+3. Watch for real-time blink counting:
+   - Total Blinks: 3
+   - Blinks/5s: 3
+4. System verifies: Blinks are natural (not a photo)
+
+#### **Step 4: Challenge** (Optional, 3 seconds)
+
+1. Click "Start Challenge"
+2. Follow instruction: "Smile" or "Turn head left" etc.
+3. System detects action
+4. Confidence score shown
+
+#### **Step 5: Submit**
+
+1. Click "Submit & Mark Attendance"
+2. All data verified automatically
+3. See success/failure message
+
+#### **Step 6: Database**
+
+1. Check database:
+
+```bash
+sqlite3 data/smartattend.db
+SELECT * FROM attendance ORDER BY timestamp DESC LIMIT 5;
+```
+
+---
+
+## Test Student Setup (30 seconds)
+
+### Register a Test Student
+
+#### Option A: Via API
+
+```bash
+curl -X POST http://localhost:8000/api/students/register \
+  -F "name=John Doe" \
+  -F "student_id=STU001" \
+  -F "roll_number=22001" \
+  -F "email=john@example.com" \
+  -F "photo=@/path/to/face.jpg"
+```
+
+#### Option B: Via Registration Page
+
+1. Go to `http://localhost:8000/`
+2. Click "Register Student"
+3. Provide info + clear photo (frontfacing)
+   email="john@example.com",
+   phone="+1234567890"
+   )
+
+````
 
 #### Option B: Bulk Import via CSV
 ```python
 from src.face_recognition.recognizer import register_bulk_students
 
 register_bulk_students(face_system, "students.csv")
-```
+````
 
 CSV Format:
+
 ```csv
 name,id,roll_number,email,phone,image_path
 John Doe,STU001,22001,john@example.com,+1234567890,data/faces/john.jpg
@@ -69,6 +117,7 @@ John Doe,STU001,22001,john@example.com,+1234567890,data/faces/john.jpg
 ### Step 4: Run the System
 
 #### Option A: Command Line Interface
+
 ```bash
 python main.py
 ```
@@ -76,6 +125,7 @@ python main.py
 Follow the on-screen prompts to mark attendance.
 
 #### Option B: Web Interface
+
 ```bash
 python app.py
 ```
@@ -87,6 +137,7 @@ Then open: http://localhost:8000
 ## 🎯 Common Tasks
 
 ### Task 1: Mark Attendance
+
 ```bash
 python main.py
 # Follow prompts:
@@ -97,6 +148,7 @@ python main.py
 ```
 
 ### Task 2: View Today's Attendance
+
 ```python
 from src.utils.database import AttendanceDatabase
 from datetime import date
@@ -109,6 +161,7 @@ for record in records:
 ```
 
 ### Task 3: Generate Daily Report
+
 ```python
 report = db.generate_daily_report(str(date.today()))
 print(f"Total Present: {report['total_present']}")
@@ -116,6 +169,7 @@ print(f"Avg Confidence: {report['avg_face_confidence']}")
 ```
 
 ### Task 4: Check Fraud Attempts
+
 ```python
 from src.fraud_detection.detector import FraudAnalytics
 
@@ -157,6 +211,7 @@ print(f"Fraud Attempts (30 days): {report['last_30_days']['total_attempts']}")
 ### Adjust Geofence Radius
 
 Edit `config/settings.py`:
+
 ```python
 GEOFENCE_CONFIG = {
     "RADIUS_METERS": 150,  # Changed from 100 to 150 meters
@@ -196,7 +251,9 @@ LIVENESS_CONFIG = {
 ## 🐛 Troubleshooting
 
 ### Problem: Camera not working
-**Solution**: 
+
+**Solution**:
+
 ```python
 # Test camera
 import cv2
@@ -206,20 +263,26 @@ print("Camera working!" if ret else "Camera failed!")
 ```
 
 ### Problem: Face not recognized
+
 **Solution**:
+
 1. Check photo quality (clear, well-lit, single face)
 2. Re-register student with better photo
 3. Lower tolerance: `TOLERANCE = 0.7` (less strict)
 
 ### Problem: Liveness detection fails
+
 **Solution**:
+
 1. Ensure good lighting
 2. Look directly at camera
 3. Blink naturally (not too fast)
 4. Adjust `EAR_THRESHOLD` if needed
 
 ### Problem: GPS accuracy poor
+
 **Solution**:
+
 1. Enable high-accuracy GPS
 2. Increase `RADIUS_METERS`
 3. Wait for GPS to stabilize
@@ -229,6 +292,7 @@ print("Camera working!" if ret else "Camera failed!")
 ## 📊 Sample Output
 
 ### Successful Attendance
+
 ```
 ============================================================
 SESSION STARTED

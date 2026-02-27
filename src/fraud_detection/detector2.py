@@ -22,7 +22,6 @@ class FraudDetector:
         self.fraud_images_dir.mkdir(parents=True, exist_ok=True)
         
         self.texture_threshold = config["TEXTURE_THRESHOLD"]
-        self.alert_email = config["ALERT_EMAIL"]
     
     def save_fraud_evidence(self, frame: np.ndarray, fraud_type: str,
                            student_id: str = None) -> str:

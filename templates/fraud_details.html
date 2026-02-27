@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fraud Attempts - SmartAttendAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --success-color: #06d6a0;
+        --danger-color: #ef476f;
+        --warning-color: #ffc107;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding-top: 70px;
+      }
+
+      .navbar {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .main-content {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px auto;
+        max-width: 1200px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        border-left: 4px solid var(--danger-color);
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--danger-color);
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        font-size: 0.95rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .fraud-item {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid var(--danger-color);
+        transition: all 0.3s ease;
+      }
+
+      .fraud-item:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        transform: translateX(5px);
+      }
+
+      .fraud-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+      }
+
+      .fraud-type-badge {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .fraud-type-spoof {
+        background: #ffebee;
+        color: #d32f2f;
+      }
+
+      .fraud-type-replay {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+
+      .fraud-type-fake {
+        background: #f3e5f5;
+        color: #7b1fa2;
+      }
+
+      .fraud-type-photo {
+        background: #e0f2f1;
+        color: #00695c;
+      }
+
+      .fraud-severity {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .severity-critical {
+        background: #ffcdd2;
+        color: #c62828;
+      }
+
+      .severity-high {
+        background: #ffecb3;
+        color: #f57f17;
+      }
+
+      .severity-medium {
+        background: #fff9c4;
+        color: #f9a825;
+      }
+
+      .fraud-details {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #f0f0f0;
+      }
+
+      .detail-row {
+        display: flex;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #666;
+        min-width: 150px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .detail-value {
+        color: #333;
+        flex: 1;
+      }
+
+      .suspicious-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--danger-color);
+        margin-right: 5px;
+      }
+
+      .filter-section {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .btn-custom {
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary-custom {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        color: white;
+      }
+
+      .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+        color: white;
+      }
+
+      .charts-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: #ddd;
+      }
+
+      .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        overflow-x: auto;
+      }
+
+      .table th {
+        border: none;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        background: #f8f9fa;
+      }
+
+      .table td {
+        border: none;
+        padding: 12px;
+        vertical-align: middle;
+      }
+
+      .toast-container {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-shield-check"></i> SmartAttendAI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/mark-attendance">Mark Attendance</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard">Dashboard</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h2><i class="bi bi-shield-exclamation"></i> Fraud Attempts</h2>
+            <p class="text-muted mb-0">Monitor and analyze security threats</p>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-number" id="totalFraudCount">0</div>
+              <div class="stat-label">Total Attempts</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-number" id="criticalCount">0</div>
+              <div class="stat-label">Critical</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-number" id="todayCount">0</div>
+              <div class="stat-label">Today</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-number" id="thisWeekCount">0</div>
+              <div class="stat-label">This Week</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+          <h5><i class="bi bi-funnel"></i> Filters</h5>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Fraud Type</label>
+              <select
+                class="form-select"
+                id="fraudTypeFilter"
+                onchange="applyFilters()"
+              >
+                <option value="">All Types</option>
+                <option value="spoof">Spoofing Detection</option>
+                <option value="replay">Replay Attack</option>
+                <option value="fake">Fake Face</option>
+                <option value="photo">Photo Attack</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Severity</label>
+              <select
+                class="form-select"
+                id="severityFilter"
+                onchange="applyFilters()"
+              >
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Date Range</label>
+              <select
+                class="form-select"
+                id="dateRangeFilter"
+                onchange="applyFilters()"
+              >
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+                <option value="365">Last Year</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">&nbsp;</label>
+              <button
+                class="btn btn-outline-secondary w-100"
+                onclick="resetFilters()"
+              >
+                <i class="bi bi-arrow-clockwise"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fraud Attempts List -->
+        <div id="fraudListContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h5>Loading fraud attempts...</h5>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-container" style="display: none" id="chartsSection">
+          <h4><i class="bi bi-bar-chart"></i> Fraud Analytics</h4>
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <canvas id="fraudTypeChart"></canvas>
+            </div>
+            <div class="col-md-6">
+              <canvas id="fraudTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Table View -->
+        <div class="table-container" style="display: none" id="tableSection">
+          <h4><i class="bi bi-table"></i> Detailed View</h4>
+          <table class="table mt-3" id="fraudTable">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Classroom</th>
+                <th>Confidence</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="fraudTableBody">
+              <tr>
+                <td colspan="6" class="text-center">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="fraudDetailModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-shield-exclamation"></i> Fraud Attempt Details
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body" id="fraudDetailContent">
+            <!-- Content will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      let allFraudData = [];
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", function () {
+        loadFraudAttempts();
+      });
+
+      // Load fraud attempts
+      async function loadFraudAttempts() {
+        try {
+          const dateRange =
+            document.getElementById("dateRangeFilter").value || 7;
+          const response = await fetch(`/api/fraud/list?days=${dateRange}`);
+          const data = await response.json();
+
+          allFraudData = data.attempts || [];
+
+          updateStatistics(allFraudData);
+          renderFraudItems(allFraudData);
+          initializeCharts(allFraudData);
+        } catch (error) {
+          console.error("Error loading fraud attempts:", error);
+          document.getElementById("fraudListContainer").innerHTML =
+            '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error loading fraud attempts</div>';
+        }
+      }
+
+      // Update statistics
+      function updateStatistics(fraudData) {
+        document.getElementById("totalFraudCount").textContent =
+          fraudData.length;
+
+        const critical = fraudData.filter(
+          (f) => f.severity === "critical",
+        ).length;
+        document.getElementById("criticalCount").textContent = critical;
+
+        const today = fraudData.filter((f) => {
+          const fraudDate = new Date(f.timestamp).toDateString();
+          return fraudDate === new Date().toDateString();
+        }).length;
+        document.getElementById("todayCount").textContent = today;
+
+        const thisWeek = fraudData.filter((f) => {
+          const fraudDate = new Date(f.timestamp);
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return fraudDate >= weekAgo;
+        }).length;
+        document.getElementById("thisWeekCount").textContent = thisWeek;
+      }
+
+      // Render fraud items
+      // Render fraud items
+      function renderFraudItems(fraudData) {
+        const container = document.getElementById("fraudListContainer");
+
+        if (fraudData.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <i class="bi bi-check-circle"></i>
+              </div>
+              <h5>No fraud attempts detected</h5>
+              <p class="text-muted">Great! No suspicious activity in the selected period.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = fraudData
+          .map((fraud) => {
+            // Ensure all values are properly set
+            const confidenceValue = Math.min(
+              100,
+              Math.max(0, fraud.confidence || 0),
+            );
+            const typeClass = fraud.type || "spoof";
+            const severityClass = fraud.severity || "medium";
+            const fraudLabel = fraud.type_label || "Unknown Detection";
+            const classroom = fraud.classroom || "Unknown Location";
+            const student = fraud.suspected_student || "Unknown Student";
+            const description = fraud.description || "Fraud attempt detected";
+
+            return `
+          <div class="fraud-item" onclick="showFraudDetails('${fraud.id}')">
+            <div class="fraud-header">
+              <div>
+                <span class="fraud-type-badge fraud-type-${typeClass}">
+                  <i class="bi bi-exclamation-circle"></i> ${fraudLabel}
+                </span>
+                <span class="fraud-severity severity-${severityClass}" style="margin-left: 10px;">
+                  ${severityClass.toUpperCase()}
+                </span>
+              </div>
+              <small class="text-muted">
+                ${fraud.timestamp ? new Date(fraud.timestamp).toLocaleString() : new Date().toLocaleString()}
+              </small>
+            </div>
+
+            <div class="fraud-details">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-geo-alt"></i> Location
+                </div>
+                <div class="detail-value">${classroom}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-person"></i> Suspected Student
+                </div>
+                <div class="detail-value">${student}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-percent"></i> Confidence
+                </div>
+                <div class="detail-value">
+                  <div class="progress" style="height: 20px;">
+                    <div
+                      class="progress-bar bg-danger"
+                      role="progressbar"
+                      style="width: ${confidenceValue}%"
+                      aria-valuenow="${confidenceValue}"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      ${confidenceValue}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-info-circle"></i> Details
+                </div>
+                <div class="detail-value">${description}</div>
+              </div>
+
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i class="bi bi-shield-check"></i> Status
+                </div>
+                <div class="detail-value">
+                  <span class="badge bg-warning">Logged & Monitored</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+      }
+
+      // Show fraud details modal
+      async function showFraudDetails(fraudId) {
+        const fraud = allFraudData.find((f) => f.id === fraudId);
+        if (!fraud) return;
+
+        // Ensure all values have fallbacks
+        const confidenceValue = Math.min(
+          100,
+          Math.max(0, fraud.confidence || 0),
+        );
+        const typeLabel = fraud.type_label || "Unknown Detection";
+        const severity = fraud.severity || "medium";
+        const classroom = fraud.classroom || "Unknown Location";
+        const student = fraud.suspected_student || "Unknown Student";
+        const description = fraud.description || "Fraud attempt detected";
+        const timestamp = fraud.timestamp
+          ? new Date(fraud.timestamp).toLocaleString()
+          : new Date().toLocaleString();
+        const detectionMethod = fraud.detection_method || "Automated System";
+
+        const content = `
+          <div class="detail-row">
+            <div class="detail-label"><strong>Type:</strong></div>
+            <div class="detail-value">${typeLabel}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Severity:</strong></div>
+            <div class="detail-value">
+              <span class="fraud-severity severity-${severity}">
+                ${severity.toUpperCase()}
+              </span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Timestamp:</strong></div>
+            <div class="detail-value">${timestamp}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Classroom:</strong></div>
+            <div class="detail-value">${classroom}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Suspected Student:</strong></div>
+            <div class="detail-value">${student}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Confidence Score:</strong></div>
+            <div class="detail-value">
+              <div class="progress">
+                <div
+                  class="progress-bar bg-danger"
+                  role="progressbar"
+                  style="width: ${confidenceValue}%"
+                  aria-valuenow="${confidenceValue}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  ${confidenceValue}%
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Description:</strong></div>
+            <div class="detail-value">${description}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label"><strong>Detection Method:</strong></div>
+            <div class="detail-value">${detectionMethod}</div>
+          </div>
+        `;
+
+        document.getElementById("fraudDetailContent").innerHTML = content;
+        new bootstrap.Modal(document.getElementById("fraudDetailModal")).show();
+      }
+
+      // Apply filters
+      function applyFilters() {
+        const fraudType = document.getElementById("fraudTypeFilter").value;
+        const severity = document.getElementById("severityFilter").value;
+
+        let filtered = allFraudData;
+
+        if (fraudType) {
+          filtered = filtered.filter((f) => f.type === fraudType);
+        }
+
+        if (severity) {
+          filtered = filtered.filter((f) => f.severity === severity);
+        }
+
+        renderFraudItems(filtered);
+      }
+
+      // Reset filters
+      function resetFilters() {
+        document.getElementById("fraudTypeFilter").value = "";
+        document.getElementById("severityFilter").value = "";
+        document.getElementById("dateRangeFilter").value = "7";
+        loadFraudAttempts();
+      }
+
+      // Initialize charts
+      function initializeCharts(fraudData) {
+        if (fraudData.length === 0) return;
+
+        document.getElementById("chartsSection").style.display = "block";
+
+        // Fraud Type Distribution
+        const typeCounter = {};
+        fraudData.forEach((f) => {
+          typeCounter[f.type_label] = (typeCounter[f.type_label] || 0) + 1;
+        });
+
+        const typeCtx = document.getElementById("fraudTypeChart");
+        if (typeCtx) {
+          new Chart(typeCtx, {
+            type: "pie",
+            data: {
+              labels: Object.keys(typeCounter),
+              datasets: [
+                {
+                  data: Object.values(typeCounter),
+                  backgroundColor: ["#ffcdd2", "#fff9c4", "#f3e5f5", "#e0f2f1"],
+                  borderColor: ["#d32f2f", "#f57f17", "#7b1fa2", "#00695c"],
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Fraud Attempts by Type",
+                },
+              },
+            },
+          });
+        }
+
+        // Fraud Trend
+        const trendData = {};
+        fraudData.forEach((f) => {
+          const date = new Date(f.timestamp).toLocaleDateString();
+          trendData[date] = (trendData[date] || 0) + 1;
+        });
+
+        const trendCtx = document.getElementById("fraudTrendChart");
+        if (trendCtx) {
+          new Chart(trendCtx, {
+            type: "line",
+            data: {
+              labels: Object.keys(trendData),
+              datasets: [
+                {
+                  label: "Daily Fraud Attempts",
+                  data: Object.values(trendData),
+                  borderColor: "#ef476f",
+                  backgroundColor: "rgba(239, 71, 111, 0.1)",
+                  tension: 0.4,
+                  fill: true,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                title: {
+                  display: true,
+                  text: "Fraud Attempt Trend",
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+              },
+            },
+          });
+        }
+      }
+
+      // Export fraud data
+      function exportFraudData() {
+        const csvContent = [
+          [
+            "Timestamp",
+            "Type",
+            "Severity",
+            "Classroom",
+            "Confidence",
+            "Details",
+          ],
+          ...allFraudData.map((f) => [
+            new Date(f.timestamp).toLocaleString(),
+            f.type_label,
+            f.severity,
+            f.classroom,
+            f.confidence + "%",
+            f.description || "",
+          ]),
+        ]
+          .map((row) => row.map((cell) => `"${cell}"`).join(","))
+          .join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `fraud_attempts_${new Date().toISOString().split("T")[0]}.csv`;
+        a.click();
+      }
+    </script>
+  </body>
+</html>

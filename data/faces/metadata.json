@@ -1,22 +1,11 @@
 [
   {
-    "name": "Demo Student",
-    "id": "DEMO001",
-    "roll_number": "D001",
-    "email": "demo@example.com",
-    "phone": "+1234567890",
-    "registered_at": "2026-02-27T06:37:52.321191",
-    "image_path": "data/faces/demo_student.jpg",
-    "face_id": 0
-  },
-  {
-    "name": "Demo Student",
-    "id": "DEMO001",
-    "roll_number": "D001",
-    "email": "demo@example.com",
-    "phone": "+1234567890",
-    "registered_at": "2026-02-27T06:44:54.465854",
-    "image_path": "data/faces/demo_student.jpg",
-    "face_id": 1
+    "name": "Mahtab Madni",
+    "id": "202403709",
+    "roll_number": "24BEC038",
+    "email": "mahtabjmi2005@gmail.com",
+    "phone": "7683064663",
+    "registered_at": "2026-02-27T21:37:47.599309",
+    "image_path": "data/faces/202403709.jpg"
   }
 ]

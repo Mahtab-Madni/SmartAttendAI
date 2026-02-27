@@ -1,9 +1,9 @@
 """
 Notification Module
-Send attendance confirmations and alerts via Telegram/SMS
+Send attendance confirmations and alerts via Telegram
 """
 import os
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 import asyncio
 
@@ -12,19 +12,10 @@ try:
     from telegram import Bot
     from telegram.error import TelegramError
     TELEGRAM_AVAILABLE = True
-    print("✓ Telegram notifications enabled")
+    print("[OK] Telegram notifications enabled")
 except ImportError:
     TELEGRAM_AVAILABLE = False
     print("python-telegram-bot not installed. Telegram notifications disabled.")
-
-# Twilio (SMS)
-try:
-    from twilio.rest import Client as TwilioClient
-    from twilio.base.exceptions import TwilioRestException
-    TWILIO_AVAILABLE = True
-except ImportError:
-    TWILIO_AVAILABLE = False
-    print("twilio not installed. SMS notifications disabled.")
 
 
 class TelegramNotifier:
@@ -102,65 +93,10 @@ Present: {present_count}/{total_count} ({percentage:.1f}%)
         return await self.send_message(chat_id, message.strip())
 
 
-class SMSNotifier:
-    """
-    Send notifications via SMS (Twilio)
-    """
-    
-    def __init__(self, account_sid: str, auth_token: str, phone_number: str):
-        if not TWILIO_AVAILABLE:
-            raise ImportError("twilio is not installed")
-        
-        self.account_sid = account_sid
-        self.auth_token = auth_token
-        self.phone_number = phone_number
-        
-        if account_sid and auth_token:
-            self.client = TwilioClient(account_sid, auth_token)
-        else:
-            self.client = None
-            print("Warning: Twilio credentials not provided")
-    
-    def send_sms(self, to_number: str, message: str) -> bool:
-        """Send SMS message"""
-        if not self.client:
-            print("Twilio client not configured")
-            return False
-        
-        try:
-            message = self.client.messages.create(
-                body=message,
-                from_=self.phone_number,
-                to=to_number
-            )
-            return True
-        except TwilioRestException as e:
-            print(f"Twilio error: {e}")
-            return False
-    
-    def send_attendance_confirmation(self, to_number: str, student_name: str,
-                                    classroom: str, timestamp: datetime) -> bool:
-        """Send attendance confirmation SMS"""
-        message = (
-            f"Attendance marked for {student_name} "
-            f"in {classroom} at {timestamp.strftime('%I:%M %p')}. "
-            f"SmartAttendAI"
-        )
-        return self.send_sms(to_number, message)
-    
-    def send_fraud_alert(self, to_number: str, fraud_type: str) -> bool:
-        """Send fraud alert SMS"""
-        message = (
-            f"ALERT: Suspicious attendance attempt detected ({fraud_type}). "
-            f"Attendance NOT marked. Contact support if this was you. "
-            f"SmartAttendAI"
-        )
-        return self.send_sms(to_number, message)
-
 
 class NotificationManager:
     """
-    Unified notification manager supporting multiple channels
+    Notification manager supporting Telegram and offline queue
     """
     
     def __init__(self, config: dict):
@@ -179,38 +115,42 @@ class NotificationManager:
                 except Exception as e:
                     print(f"Failed to initialize Telegram: {e}")
         
-        # Initialize SMS
-        self.sms = None
-        if self.notification_config.get("SMS_ENABLED") and TWILIO_AVAILABLE:
-            sid = self.api_keys.get("TWILIO_ACCOUNT_SID")
-            token = self.api_keys.get("TWILIO_AUTH_TOKEN")
-            phone = self.api_keys.get("TWILIO_PHONE_NUMBER")
-            if sid and token and phone:
-                try:
-                    self.sms = SMSNotifier(sid, token, phone)
-                    print("SMS notifications enabled")
-                except Exception as e:
-                    print(f"Failed to initialize SMS: {e}")
+        # Initialize offline sync if available
+        self.offline_sync = None
+        try:
+            from .offline_sync import get_offline_sync_manager
+            self.offline_sync = get_offline_sync_manager()
+        except Exception as e:
+            print(f"Offline sync not available: {e}")
+
     
     async def notify_attendance_success(self, student_data: dict) -> dict:
         """
-        Send attendance confirmation to student
+        Send attendance confirmation to student via Telegram
         
         Args:
-            student_data: Dict with student_name, classroom, timestamp, 
-                         telegram_id (optional), phone (optional)
+            student_data: Dict with student_name, classroom, timestamp, telegram_id
         
         Returns:
-            Dict with success status for each channel
+            Dict with success status
         """
         results = {
             "telegram": False,
-            "sms": False
+            "offline_queued": False
         }
         
         student_name = student_data.get("student_name", "Student")
         classroom = student_data.get("classroom", "Classroom")
         timestamp = student_data.get("timestamp", datetime.now())
+        
+        # Prepare notification data for offline queue
+        notification_data = {
+            "student_id": student_data.get("student_id"),
+            "telegram_id": student_data.get("telegram_id"),
+            "message": f"✅ Attendance marked for {student_name} in {classroom} at {timestamp.strftime('%I:%M %p')}",
+            "notification_type": "attendance_success",
+            "classroom": classroom
+        }
         
         # Send Telegram notification
         if self.telegram and student_data.get("telegram_id"):
@@ -223,26 +163,22 @@ class NotificationManager:
                 )
             except Exception as e:
                 print(f"Telegram notification error: {e}")
+                # Queue for later if offline
+                if self.offline_sync:
+                    notification_data["student_id"] = student_data.get("student_id")
+                    self.offline_sync.queue_notification(notification_data)
         
-        # Send SMS notification
-        if self.sms and student_data.get("phone"):
-            try:
-                results["sms"] = self.sms.send_attendance_confirmation(
-                    to_number=student_data["phone"],
-                    student_name=student_name,
-                    classroom=classroom,
-                    timestamp=timestamp
-                )
-            except Exception as e:
-                print(f"SMS notification error: {e}")
+        # Queue notification if Telegram failed
+        if self.offline_sync and not results["telegram"]:
+            results["offline_queued"] = self.offline_sync.queue_notification(notification_data)
         
         return results
     
     async def notify_fraud_attempt(self, student_data: dict, fraud_type: str) -> dict:
-        """Send fraud alert to student"""
+        """Send fraud alert to student via Telegram"""
         results = {
             "telegram": False,
-            "sms": False
+            "offline_queued": False
         }
         
         timestamp = datetime.now()
@@ -257,16 +193,6 @@ class NotificationManager:
                 )
             except Exception as e:
                 print(f"Telegram alert error: {e}")
-        
-        # Send SMS alert
-        if self.sms and student_data.get("phone"):
-            try:
-                results["sms"] = self.sms.send_fraud_alert(
-                    to_number=student_data["phone"],
-                    fraud_type=fraud_type
-                )
-            except Exception as e:
-                print(f"SMS alert error: {e}")
         
         return results
     
@@ -303,7 +229,6 @@ async def test_notifications():
         "classroom": "Room_101",
         "timestamp": datetime.now(),
         "telegram_id": "YOUR_TELEGRAM_CHAT_ID",  # Replace with actual chat ID
-        "phone": "+1234567890"  # Replace with actual phone number
     }
     
     print("Testing attendance confirmation...")

@@ -122,9 +122,6 @@ SECURITY_CONFIG = {
 ENHANCED_API_KEYS = {
     'TELEGRAM_BOT_TOKEN': ConfigLoader.get_env('TELEGRAM_BOT_TOKEN', ''),
     'TELEGRAM_CHAT_ID': ConfigLoader.get_env('TELEGRAM_CHAT_ID', ''),
-    'TWILIO_ACCOUNT_SID': ConfigLoader.get_env('TWILIO_ACCOUNT_SID', ''),
-    'TWILIO_AUTH_TOKEN': ConfigLoader.get_env('TWILIO_AUTH_TOKEN', ''),
-    'TWILIO_PHONE_NUMBER': ConfigLoader.get_env('TWILIO_PHONE_NUMBER', ''),
 }
 
 # Enhanced Geofencing Configuration
@@ -218,8 +215,7 @@ def print_config_status():
         print("Debug mode: DISABLED")
     
     # Check critical services
-    notifications_configured = bool(ENHANCED_API_KEYS['TELEGRAM_BOT_TOKEN'] or 
-                                   ENHANCED_API_KEYS['TWILIO_ACCOUNT_SID'])
+    notifications_configured = bool(ENHANCED_API_KEYS.get('TELEGRAM_BOT_TOKEN'))
     print(f"Notifications configured: {'YES' if notifications_configured else 'NO'}")
     
     monitoring_configured = bool(MONITORING_CONFIG['SENTRY_DSN'])

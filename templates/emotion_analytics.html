@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emotion & Engagement Analytics - SmartAttendAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --success-color: #06d6a0;
+        --danger-color: #ef476f;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding-top: 70px;
+      }
+
+      .navbar {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .container-main {
+        max-width: 1200px;
+        margin: 30px auto;
+      }
+
+      .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 20px;
+        font-weight: 600;
+      }
+
+      .metric-box {
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-bottom: 15px;
+      }
+
+      .metric-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .emotion-badge {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        margin: 5px;
+        font-size: 0.9rem;
+      }
+
+      .emotion-positive {
+        background: #06d6a0;
+        color: white;
+      }
+
+      .emotion-neutral {
+        background: #ffc107;
+        color: white;
+      }
+
+      .emotion-negative {
+        background: #ef476f;
+        color: white;
+      }
+
+      .student-attention-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .student-item {
+        padding: 12px;
+        border-left: 4px solid #667eea;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+      }
+
+      .student-item.warning {
+        border-left-color: #ffc107;
+      }
+
+      .student-item.danger {
+        border-left-color: #ef476f;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+      }
+
+      .btn-custom {
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary-custom {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        color: white;
+      }
+
+      .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+      }
+
+      .insight-box {
+        background: linear-gradient(
+          135deg,
+          rgba(6, 214, 160, 0.1),
+          rgba(239, 71, 111, 0.1)
+        );
+        border-left: 4px solid #06d6a0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+
+      .insight-box.warning {
+        border-left-color: #ffc107;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 193, 7, 0.1),
+          rgba(255, 193, 7, 0.05)
+        );
+      }
+
+      .insight-box.danger {
+        border-left-color: #ef476f;
+        background: linear-gradient(
+          135deg,
+          rgba(239, 71, 111, 0.1),
+          rgba(239, 71, 111, 0.05)
+        );
+      }
+
+      .emotion-emoji {
+        font-size: 2rem;
+        margin-right: 10px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-shield-check"></i> SmartAttendAI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/mark-attendance">Mark Attendance</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/emotion-analytics"
+                >Emotion Analytics</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+      <h2 class="text-white mb-4">
+        <i class="bi bi-heart-pulse"></i> Emotion & Engagement Analytics
+      </h2>
+
+      <!-- Session Selection -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <i class="bi bi-search"></i> Select Classroom & Date
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Classroom:</label>
+              <select class="form-select" id="classroomSelect">
+                <option value="">Choose a classroom...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Date:</label>
+              <input type="date" class="form-control" id="analyticsDate" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">&nbsp;</label>
+              <button
+                class="btn btn-primary-custom btn-custom w-100"
+                onclick="loadAnalytics()"
+              >
+                <i class="bi bi-arrow-repeat"></i> Load Report
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Metrics -->
+      <div class="row fade-in">
+        <div class="col-md-3">
+          <div class="metric-box">
+            <div class="metric-label">
+              <i class="bi bi-people"></i> Total Students
+            </div>
+            <div class="metric-number" id="totalStudents">0</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric-box">
+            <div class="metric-label">
+              <i class="bi bi-check-circle"></i> Present
+            </div>
+            <div class="metric-number" id="presentCount">0</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric-box">
+            <div class="metric-label">
+              <i class="bi bi-pie-chart"></i> Avg Engagement
+            </div>
+            <div class="metric-number" id="avgEngagement">0%</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric-box">
+            <div class="metric-label">
+              <i class="bi bi-exclamation-triangle"></i> Needs Attention
+            </div>
+            <div class="metric-number" id="needsAttention">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emotion Distribution -->
+      <div class="row fade-in">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <i class="bi bi-pie-chart"></i> Emotion Distribution
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="emotionChart"></canvas>
+              </div>
+              <div id="emotionLegend" style="text-align: center"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header">
+              <i class="bi bi-bar-chart"></i> Engagement Levels
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="engagementChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Insights -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <i class="bi bi-lightbulb"></i> Key Insights & Recommendations
+        </div>
+        <div class="card-body">
+          <div id="insightsContainer">
+            <p class="text-muted">
+              Select a classroom and date to view insights
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students Needing Attention -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <i class="bi bi-exclamation-triangle"></i> Students Needing Attention
+        </div>
+        <div class="card-body">
+          <div class="student-attention-list" id="attentionList">
+            <p class="text-muted">No data available</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Emotion Report -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <i class="bi bi-table"></i> Detailed Emotion Report
+        </div>
+        <div class="card-body">
+          <div style="overflow-x: auto">
+            <table class="table table-hover" id="emotionTable">
+              <thead class="table-light">
+                <tr>
+                  <th>Student Name</th>
+                  <th>Roll Number</th>
+                  <th>Emotion</th>
+                  <th>Engagement</th>
+                  <th>Confidence</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="emotionTableBody">
+                <tr>
+                  <td colspan="6" class="text-center text-muted">
+                    No data available
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let emotionChart = null;
+      let engagementChart = null;
+
+      // Initialize
+      document.getElementById("analyticsDate").valueAsDate = new Date();
+
+      // Load classrooms
+      async function loadClassrooms() {
+        try {
+          const response = await fetch("/api/geofence/config");
+          const config = await response.json();
+
+          const classroomSelect = document.getElementById("classroomSelect");
+          const classrooms = Object.keys(config.classrooms);
+
+          classrooms.forEach((classroom) => {
+            const option = document.createElement("option");
+            option.value = classroom;
+            option.textContent = classroom;
+            classroomSelect.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Error loading classrooms:", error);
+        }
+      }
+
+      // Load analytics data
+      async function loadAnalytics() {
+        const classroom = document.getElementById("classroomSelect").value;
+        const dateStr = document.getElementById("analyticsDate").value;
+
+        if (!classroom) {
+          alert("Please select a classroom");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `/api/reports/emotion/session/${encodeURIComponent(classroom)}/${dateStr}`,
+          );
+          const data = await response.json();
+
+          if (data.success) {
+            displayAnalytics(data.report);
+          } else {
+            alert("No data available for this classroom and date");
+            clearAnalytics();
+          }
+        } catch (error) {
+          console.error("Error loading analytics:", error);
+          alert("Error loading analytics data");
+        }
+      }
+
+      function displayAnalytics(report) {
+        // Update metrics
+        document.getElementById("totalStudents").textContent =
+          report.total_students;
+        document.getElementById("presentCount").textContent =
+          report.total_students;
+        document.getElementById("avgEngagement").textContent =
+          Math.round(report.average_engagement_score) + "%";
+        document.getElementById("needsAttention").textContent =
+          report.students_needing_attention.length;
+
+        // Update emotion chart
+        updateEmotionChart(report.detailed_emotions);
+
+        // Update engagement chart
+        updateEngagementChart(report.emotion_summary);
+
+        // Display insights
+        displayInsights(report);
+
+        // Display students needing attention
+        displayAttentionList(report.students_needing_attention);
+      }
+
+      function updateEmotionChart(emotionData) {
+        const ctx = document.getElementById("emotionChart").getContext("2d");
+
+        const labels = Object.keys(emotionData);
+        const data = Object.values(emotionData);
+
+        const colors = [
+          "#06d6a0",
+          "#ffc107",
+          "#ef476f",
+          "#667eea",
+          "#764ba2",
+          "#4361ee",
+          "#3a0ca3",
+        ];
+
+        if (emotionChart) {
+          emotionChart.destroy();
+        }
+
+        emotionChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderColor: "white",
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+
+        // Update legend
+        const legendHtml = labels
+          .map(
+            (label, index) => `
+          <span class="emotion-badge emotion-${getCategoryColor(label)}">
+            ${label}: ${data[index]}
+          </span>
+        `,
+          )
+          .join("");
+        document.getElementById("emotionLegend").innerHTML = legendHtml;
+      }
+
+      function updateEngagementChart(engagementSummary) {
+        const ctx = document.getElementById("engagementChart").getContext("2d");
+
+        const labels = ["Positive", "Neutral", "Negative"];
+        const data = [
+          engagementSummary.positive,
+          engagementSummary.neutral,
+          engagementSummary.negative,
+        ];
+
+        const colors = ["#06d6a0", "#ffc107", "#ef476f"];
+
+        if (engagementChart) {
+          engagementChart.destroy();
+        }
+
+        engagementChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Percentage (%)",
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+
+      function displayInsights(report) {
+        const container = document.getElementById("insightsContainer");
+        const insights = report.key_insights || [];
+        const recommendations = report.recommendations || [];
+
+        let html = " <div class='row'>";
+
+        // Key Insights
+        html +=
+          "<div class='col-md-6'><h6 class='fw-bold mb-3'>Observed Patterns:</h6>";
+        if (insights.length > 0) {
+          insights.forEach((insight) => {
+            const isWarning = insight.includes("⚠️") || insight.includes("%");
+            const isDanger =
+              insight.includes("Negative") || insight.includes("Alert");
+            let className = "insight-box";
+            if (isDanger) className += " danger";
+            else if (isWarning) className += " warning";
+
+            html += `<div class="${className}">${insight}</div>`;
+          });
+        } else {
+          html += '<p class="text-muted">No significant patterns observed</p>';
+        }
+        html += "</div>";
+
+        // Recommendations
+        html +=
+          "<div class='col-md-6'><h6 class='fw-bold mb-3'>Teacher Recommendations:</h6>";
+        if (recommendations.length > 0) {
+          recommendations.forEach((rec) => {
+            html += `<div class="insight-box"><strong>💡</strong> ${rec}</div>`;
+          });
+        } else {
+          html +=
+            '<p class="text-muted">Class engagement appears to be positive</p>';
+        }
+        html += "</div>";
+
+        html += "</div>";
+        container.innerHTML = html;
+      }
+
+      function displayAttentionList(students) {
+        const container = document.getElementById("attentionList");
+
+        if (!students || students.length === 0) {
+          container.innerHTML =
+            '<p class="text-success"><i class="bi bi-check-circle"></i> No students requiring attention</p>';
+          return;
+        }
+
+        let html = "";
+        students.forEach((student) => {
+          const emotionClass =
+            student.emotion === "confused" ? "danger" : "warning";
+          html += `
+            <div class="student-item ${emotionClass}">
+              <div class="fw-bold">${student.name}</div>
+              <small class="text-muted">Roll: ${student.student_id}</small>
+              <br/>
+              <span class="badge bg-warning">Emotion: ${student.emotion}</span>
+              <span class="badge bg-secondary">Confidence: ${(student.confidence * 100).toFixed(0)}%</span>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      function getCategoryColor(emotion) {
+        const positive = ["happy", "focused", "engaged"];
+        const negative = ["bored", "confused", "sad", "angry"];
+
+        if (positive.includes(emotion)) return "positive";
+        if (negative.includes(emotion)) return "negative";
+        return "neutral";
+      }
+
+      function clearAnalytics() {
+        document.getElementById("totalStudents").textContent = "0";
+        document.getElementById("presentCount").textContent = "0";
+        document.getElementById("avgEngagement").textContent = "0%";
+        document.getElementById("needsAttention").textContent = "0";
+        document.getElementById("insightsContainer").innerHTML =
+          '<p class="text-muted">Select a classroom and date to view insights</p>';
+        document.getElementById("attentionList").innerHTML =
+          '<p class="text-muted">No data available</p>';
+      }
+
+      // Initialize on page load
+      window.addEventListener("load", loadClassrooms);
+    </script>
+  </body>
+</html>

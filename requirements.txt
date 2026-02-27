@@ -5,6 +5,7 @@ face-recognition
 numpy
 scipy
 cmake
+dlib
 
 # Deep Learning
 tensorflow
@@ -20,7 +21,6 @@ jinja2
 
 # Database
 sqlalchemy
-firebase-admin
 
 # Geolocation
 geopy
@@ -33,7 +33,6 @@ imutils
 
 # Communication APIs
 python-telegram-bot
-twilio
 
 # Utilities
 python-dotenv
@@ -43,12 +42,9 @@ matplotlib
 requests
 aiofiles
 
-# Audio Processing (for voice verification)
-librosa
-soundfile
-pydub
-SpeechRecognition
-
 # Testing
 pytest
 pytest-asyncio
+
+# Security
+itsdangerous

@@ -35,7 +35,7 @@ class SmartAttendAI:
         
         # Initialize core modules
         self.liveness_detector = LivenessDetector(LIVENESS_CONFIG)
-        self.texture_analyzer = TextureAnalyzer()
+        self.texture_analyzer = TextureAnalyzer(model_path="models/spoof_detection_model.h5")
         self.challenge_verifier = ChallengeResponseVerifier(FRAUD_CONFIG["CHALLENGES"])
         
         self.face_system = FaceRecognitionSystem(FACE_CONFIG)
@@ -58,7 +58,7 @@ class SmartAttendAI:
         # Frame history for motion analysis
         self.frames_history = []
         
-        print("✓ SmartAttendAI initialized successfully!")
+        print("[OK] SmartAttendAI initialized successfully!")
     
     def start_session(self, session_id: str, classroom: str, 
                      subject: str = None, teacher_name: str = None):
@@ -128,17 +128,17 @@ class SmartAttendAI:
         
         if not is_valid_location:
             result["message"] = f"Location validation failed: {geo_message}"
-            print(f"  ✗ {result['message']}")
+            print(f"  [FAIL] {result['message']}")
             return result
         
-        print(f"  ✓ {geo_message}")
+        print(f"  [OK] {geo_message}")
         
         # Check for GPS spoofing
         security = GeofenceSecurity()
         is_suspicious, gps_reason = security.detect_gps_spoofing(user_location)
         if is_suspicious:
             result["message"] = f"GPS spoofing detected: {gps_reason}"
-            print(f"  ✗ {result['message']}")
+            print(f"  [FAIL] {result['message']}")
             self.fraud_detector.database.log_fraud_attempt(
                 fraud_type="gps_spoofing",
                 details=gps_reason,
@@ -187,10 +187,10 @@ class SmartAttendAI:
             cap.release()
             cv2.destroyAllWindows()
             result["message"] = f"Liveness verification failed: {message}"
-            print(f"  ✗ {result['message']}")
+            print(f"  [FAIL] {result['message']}")
             return result
         
-        print(f"  ✓ Liveness verified (blinks: {blink_count})")
+        print(f"  [OK] Liveness verified (blinks: {blink_count})")
         
         # Step 3: Challenge-Response (optional)
         if use_challenge:
@@ -265,10 +265,10 @@ class SmartAttendAI:
         
         if not student_match:
             result["message"] = "Face not recognized. Please register first."
-            print(f"  ✗ {result['message']}")
+            print(f"  [FAIL] {result['message']}")
             return result
         
-        print(f"  ✓ Recognized: {student_match['name']} ({face_confidence:.2f})")
+        print(f"  [OK] Recognized: {student_match['name']} ({face_confidence:.2f})")
         result["student"] = student_match
         
         # Step 5: Fraud Detection
@@ -294,7 +294,7 @@ class SmartAttendAI:
             
             if fraud_results["is_fraud"]:
                 result["message"] = f"Fraud detected: {fraud_results['fraud_type']}"
-                print(f"  ✗ {result['message']}")
+                print(f"  [FAIL] {result['message']}")
                 
                 # Handle fraud attempt
                 self.fraud_detector.handle_fraud_attempt(
@@ -312,11 +312,11 @@ class SmartAttendAI:
                 
                 return result
         
-        print("  ✓ No fraud detected")
+        print("  [OK] No fraud detected")
         
         # All checks passed - Mark attendance
         print("\n" + "="*60)
-        print("ALL CHECKS PASSED ✓")
+        print("ALL CHECKS PASSED [OK]")
         print("="*60)
         
         success = self.database.mark_attendance(
@@ -334,7 +334,7 @@ class SmartAttendAI:
             result["message"] = "Attendance marked successfully"
             
             timestamp = datetime.now()
-            print(f"\n✓ Attendance marked for {student_match['name']}")
+            print(f"\n[OK] Attendance marked for {student_match['name']}")
             print(f"  Time: {timestamp.strftime('%I:%M:%S %p')}")
             print(f"  Location: {user_location}")
             print(f"  Classroom: {classroom}")

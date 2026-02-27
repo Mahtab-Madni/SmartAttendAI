@@ -130,11 +130,6 @@ class SmartAttendAISetup:
 # Telegram Bot (for notifications)
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 
-# Twilio (for SMS notifications)
-TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
-TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
-TWILIO_PHONE_NUMBER=+1234567890
-
 # Optional: Database
 # DATABASE_TYPE=sqlite  # or firebase
 # FIREBASE_CREDENTIALS_PATH=config/firebase-credentials.json
@@ -189,7 +184,6 @@ Jane Smith,STU002,22002,jane@example.com,+1234567891,data/faces/jane_smith.jpg
         print("Next Steps:\n")
         print("1. Edit .env file with your API credentials:")
         print("   - Telegram Bot Token (for notifications)")
-        print("   - Twilio credentials (for SMS)")
         print()
         print("2. Register students:")
         print("   python -c \"from src.face_recognition.recognizer import *\"")

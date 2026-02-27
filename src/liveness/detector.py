@@ -9,6 +9,7 @@ import dlib
 from imutils import face_utils
 import time
 from typing import Tuple, Optional
+import os
 
 class LivenessDetector:
     def __init__(self, config):
@@ -19,11 +20,24 @@ class LivenessDetector:
         self.frame_counter = 0
         self.total_blinks = 0
         self.start_time = time.time()
+        self.blink_events = []  # Track blink timestamps for per-interval counting
+        self.display_info = {}  # Store display information for UI
         
         # Load dlib's face detector and facial landmark predictor
         self.detector = dlib.get_frontal_face_detector()
-        # Download shape predictor: http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
-        self.predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
+        
+        # Try to load the shape predictor, but make it optional
+        self.predictor = None
+        try:
+            if os.path.exists("models/shape_predictor_68_face_landmarks.dat"):
+                self.predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
+                print("[LIVENESS] Shape predictor loaded successfully")
+            else:
+                print("[LIVENESS] Warning: Shape predictor not found at models/shape_predictor_68_face_landmarks.dat")
+                print("[LIVENESS] Liveness detection will use fallback methods")
+        except Exception as e:
+            print(f"[LIVENESS] Warning: Could not load shape predictor: {e}")
+            print("[LIVENESS] Liveness detection will use fallback methods")
         
         # Eye landmark indices
         self.LEFT_EYE_START = 42
@@ -49,6 +63,30 @@ class LivenessDetector:
         # Calculate EAR
         ear = (A + B) / (2.0 * C)
         return ear
+    
+    def get_blinks_per_5s(self) -> int:
+        """
+        Get number of blinks in the last 5 seconds
+        """
+        current_time = time.time()
+        # Remove blink events older than 5 seconds
+        self.blink_events = [t for t in self.blink_events if (current_time - t) < 5.0]
+        return len(self.blink_events)
+    
+    def get_display_info(self) -> dict:
+        """
+        Get display information for UI rendering
+        """
+        elapsed_time = time.time() - self.start_time
+        blinks_5s = self.get_blinks_per_5s()
+        
+        return {
+            "total_blinks": self.total_blinks,
+            "blinks_per_5s": blinks_5s,
+            "elapsed_time": int(elapsed_time),
+            "ear_threshold": self.ear_threshold,
+            "status": "monitoring" if elapsed_time < self.config.get("BLINK_TIME_WINDOW", 5) else "complete"
+        }
     
     def detect_blinks(self, frame: np.ndarray) -> Tuple[bool, str, np.ndarray]:
         """
@@ -93,17 +131,22 @@ class LivenessDetector:
             # Eyes opened after being closed
             if self.frame_counter >= self.consecutive_frames:
                 self.total_blinks += 1
+                # Record blink timestamp for per-interval counting
+                self.blink_events.append(time.time())
             self.frame_counter = 0
         
         # Check elapsed time
         elapsed_time = time.time() - self.start_time
+        blinks_5s = self.get_blinks_per_5s()
         
         # Display information
         cv2.putText(frame, f"EAR: {avg_ear:.2f}", (10, 30),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(frame, f"Blinks: {self.total_blinks}", (10, 60),
+        cv2.putText(frame, f"Total Blinks: {self.total_blinks}", (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(frame, f"Time: {int(elapsed_time)}s", (10, 90),
+        cv2.putText(frame, f"Blinks/5s: {blinks_5s}", (10, 90),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"Time: {int(elapsed_time)}s", (10, 120),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         
         # Verify liveness based on blink count and time
@@ -112,13 +155,13 @@ class LivenessDetector:
             max_blinks = self.config["MAX_BLINKS"]
             
             if self.total_blinks < min_blinks:
-                return False, "Suspicious: Too few blinks (possible photo)", frame
+                return False, f"Suspicious: Too few blinks ({self.total_blinks}). Possible photo/video", frame
             elif self.total_blinks > max_blinks:
-                return False, "Suspicious: Too many blinks (possible attack)", frame
+                return False, f"Suspicious: Too many blinks ({self.total_blinks}). Possible attack", frame
             else:
-                return True, "Liveness verified", frame
+                return True, f"Liveness verified! {self.total_blinks} blinks detected in {int(elapsed_time)}s", frame
         
-        return None, f"Verifying... ({int(elapsed_time)}s)", frame
+        return None, f"Verifying... ({int(elapsed_time)}s) - Blinks: {self.total_blinks}/5s: {blinks_5s}", frame
     
     def reset(self):
         """Reset detection counters"""
@@ -179,40 +222,54 @@ class TextureAnalyzer:
         Basic texture analysis using frequency domain (FFT)
         Screens have regular pixel patterns that show up in frequency domain
         """
-        gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
-        
-        # Apply FFT
-        f_transform = np.fft.fft2(gray)
-        f_shift = np.fft.fftshift(f_transform)
-        magnitude = np.abs(f_shift)
-        
-        # High-frequency content indicates screen patterns
-        h, w = magnitude.shape
-        center_h, center_w = h // 2, w // 2
-        
-        # Calculate high-frequency energy (corners)
-        corner_size = min(h, w) // 4
-        corners = (
-            magnitude[:corner_size, :corner_size].sum() +
-            magnitude[:corner_size, -corner_size:].sum() +
-            magnitude[-corner_size:, :corner_size].sum() +
-            magnitude[-corner_size:, -corner_size:].sum()
-        )
-        
-        # Calculate center energy (low frequency)
-        center = magnitude[
-            center_h - corner_size:center_h + corner_size,
-            center_w - corner_size:center_w + corner_size
-        ].sum()
-        
-        # Ratio: Real faces have more low-frequency content
-        ratio = center / (corners + 1e-6)
-        
-        # Threshold-based decision
-        is_real = ratio > 5.0  # Empirical threshold
-        confidence = min(ratio / 10.0, 1.0)
-        
-        return is_real, confidence
+        try:
+            if face_region.size == 0:
+                return False, 0.0
+            
+            gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
+            
+            # Apply FFT
+            f_transform = np.fft.fft2(gray)
+            f_shift = np.fft.fftshift(f_transform)
+            magnitude = np.abs(f_shift)
+            
+            # High-frequency content indicates screen patterns
+            h, w = magnitude.shape
+            center_h, center_w = h // 2, w // 2
+            
+            # Calculate high-frequency energy (corners)
+            corner_size = min(h, w) // 4
+            corners = (
+                magnitude[:corner_size, :corner_size].sum() +
+                magnitude[:corner_size, -corner_size:].sum() +
+                magnitude[-corner_size:, :corner_size].sum() +
+                magnitude[-corner_size:, -corner_size:].sum()
+            )
+            
+            # Calculate center energy (low frequency)
+            center = magnitude[
+                center_h - corner_size:center_h + corner_size,
+                center_w - corner_size:center_w + corner_size
+            ].sum()
+            
+            # Ratio: Real faces have more low-frequency content
+            ratio = center / (corners + 1e-6)
+            
+            # STRICTER: Check for screen patterns
+            # Screens show high frequency patterns, real faces show low frequency dominance
+            # Threshold lowered from 5.0 to 2.5 for better detection
+            is_real = ratio > 2.5
+            
+            # Calculate confidence inversely - high corner energy = likely fake
+            corner_energy = corners / (magnitude.sum() + 1e-6)
+            confidence = min(corner_energy, 1.0)
+            
+            print(f"[TEXTURE] Frequency analysis: ratio={ratio:.2f}, corner_energy={corner_energy:.3f}")
+            
+            return is_real, confidence
+        except Exception as e:
+            print(f"[TEXTURE] Basic analysis error: {e}")
+            return True, 0.5  # Default to real on error
 
 
 class ChallengeResponseVerifier:

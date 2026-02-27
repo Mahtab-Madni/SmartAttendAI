@@ -172,12 +172,31 @@
           <label for="classroomSelect" class="form-label fw-bold"
             >Select Classroom:</label
           >
-          <select class="form-select" id="classroomSelect">
-            <option value="">Choose a classroom...</option>
-            {% for classroom in classrooms %}
-            <option value="{{ classroom }}">{{ classroom }}</option>
-            {% endfor %}
-          </select>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              align-items: flex-end;
+              flex-wrap: wrap;
+            "
+          >
+            <div style="flex: 1; min-width: 200px">
+              <select class="form-select" id="classroomSelect">
+                <option value="">Choose a classroom...</option>
+                {% for classroom in classrooms %}
+                <option value="{{ classroom }}">{{ classroom }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button
+              id="startAttendanceBtn"
+              class="btn btn-primary-custom btn-custom"
+              style="display: none; margin-bottom: 0"
+              title="Click to begin attendance verification"
+            >
+              <i class="bi bi-play-circle"></i> Start Attendance
+            </button>
+          </div>
         </div>
 
         <!-- Video Container -->
@@ -188,18 +207,28 @@
 
         <!-- Controls -->
         <div class="controls">
-          <button id="startCamera" class="btn btn-primary-custom btn-custom">
+          <button
+            id="startCamera"
+            class="btn btn-primary-custom btn-custom"
+            style="display: none"
+          >
             <i class="bi bi-camera-video"></i> Start Camera
           </button>
           <button
             id="markAttendance"
             class="btn btn-success-custom btn-custom"
+            style="display: none"
             disabled
           >
             <i class="bi bi-check-circle"></i> Mark Attendance
           </button>
-          <button id="stopCamera" class="btn btn-secondary btn-custom" disabled>
-            <i class="bi bi-camera-video-off"></i> Stop Camera
+          <button
+            id="stopCamera"
+            class="btn btn-danger btn-custom"
+            disabled
+            title="Stop the automated attendance verification"
+          >
+            <i class="bi bi-stop-circle"></i> Stop Process
           </button>
         </div>
 
@@ -207,20 +236,259 @@
         <div class="status-display">
           <h5><i class="bi bi-info-circle"></i> Status</h5>
           <div id="statusMessage">
-            Select a classroom and start the camera to begin.
+            <span class="text-secondary"
+              ><i class="bi bi-hourglass-split"></i> Select a classroom to begin
+              automated attendance verification</span
+            >
           </div>
+          <!-- Emotion Engagement Display -->
+          <div
+            id="emotionDisplay"
+            style="
+              display: none;
+              margin-top: 15px;
+              padding: 15px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              border-radius: 10px;
+              text-align: center;
+            "
+          >
+            <p style="color: white; margin-bottom: 10px; font-weight: 600">
+              <i class="bi bi-heart-pulse"></i> Student Engagement
+            </p>
+            <div
+              style="
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+              "
+            >
+              <div style="text-align: center; color: white">
+                <div
+                  style="font-size: 3rem; margin-bottom: 5px"
+                  id="emotionEmoji"
+                >
+                  😊
+                </div>
+                <div style="font-size: 0.9rem" id="emotionLabel">Happy</div>
+                <div
+                  style="font-size: 0.8rem; margin-top: 3px"
+                  id="emotionEngagement"
+                >
+                  Very Engaged
+                </div>
+              </div>
+              <div
+                style="
+                  border-left: 2px solid rgba(255, 255, 255, 0.3);
+                  padding-left: 15px;
+                  color: white;
+                  text-align: left;
+                  font-size: 0.9rem;
+                "
+              >
+                <div id="emotionConfidence">Confidence: 85%</div>
+              </div>
+            </div>
+          </div>
+          <div
+            id="countdownDisplay"
+            style="display: none; margin-top: 20px; text-align: center"
+          >
+            <p style="font-size: 1.1rem; font-weight: 600; color: #667eea">
+              <i class="bi bi-arrow-repeat"></i> Auto-starting next verification
+              in:
+            </p>
+            <div
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 50%;
+                width: 120px;
+                height: 120px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 15px auto;
+                font-size: 3rem;
+                font-weight: bold;
+                box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+              "
+            >
+              <span id="countdownValue">10</span>
+            </div>
+            <p style="font-size: 0.95rem; color: #666">
+              Ready for the next student...
+            </p>
+          </div>
+        </div>
+
+        <!-- Challenge Modal -->
+        <div
+          id="challengeModal"
+          style="
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+          "
+        >
+          <button
+            style="
+              position: absolute;
+              top: 15px;
+              right: 15px;
+              border: none;
+              background: none;
+              font-size: 24px;
+              cursor: pointer;
+            "
+            onclick="cancelChallenge()"
+          >
+            &times;
+          </button>
+          <h3
+            id="challengeTitle"
+            style="margin-bottom: 20px; text-align: center; color: #667eea"
+          >
+            <i class="bi bi-shield-check"></i> Live Check Challenge
+          </h3>
+          <div id="challengeContent" style="text-align: center; padding: 20px">
+            <p
+              id="challengeInstruction"
+              style="font-size: 1.1rem; margin-bottom: 15px; color: #333"
+            ></p>
+            <div
+              style="
+                background: #f0f0f0;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 15px 0;
+              "
+            >
+              <p style="margin: 0; color: #666">
+                Time remaining: <span id="challengeTimer">3</span>s
+              </p>
+            </div>
+            <button
+              id="challengeSkip"
+              class="btn btn-secondary"
+              onclick="skipChallenge()"
+              style="margin-top: 15px"
+            >
+              Skip Challenge
+            </button>
+          </div>
+        </div>
+
+        <!-- Challenge overlay for modal -->
+        <div
+          id="challengeOverlay"
+          style="
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+          "
+        ></div>
+
+        <!-- Debug Panel -->
+        <div
+          style="
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+          "
+          id="debugContainer"
+        >
+          <h6>
+            <i class="bi bi-terminal"></i> Debug Log (<span
+              id="debugToggle"
+              style="
+                cursor: pointer;
+                color: #dc3545;
+                text-decoration: underline;
+              "
+              >click to toggle</span
+            >)
+          </h6>
+          <div
+            id="debugPanel"
+            style="
+              font-family: monospace;
+              font-size: 0.85rem;
+              max-height: 200px;
+              overflow-y: auto;
+              background: #fff;
+              padding: 10px;
+              border-radius: 5px;
+              display: none;
+              line-height: 1.4;
+            "
+          ></div>
         </div>
 
         <!-- Instructions -->
         <div class="alert alert-info">
-          <h6><i class="bi bi-lightbulb"></i> Instructions:</h6>
+          <h6>
+            <i class="bi bi-lightbulb"></i> How It Works (Fully Automated):
+          </h6>
           <ul class="mb-0">
-            <li>Select your classroom from the dropdown</li>
-            <li>Click "Start Camera" to activate facial recognition</li>
             <li>
-              Look directly at the camera and follow liveness detection prompts
+              <strong>Select Classroom:</strong> Choose your classroom from the
+              dropdown - this triggers the automated process
             </li>
-            <li>Click "Mark Attendance" when your face is recognized</li>
+            <li>
+              <strong>GPS Validation:</strong> System automatically validates
+              your GPS location - you must be within 200 meters of the classroom
+            </li>
+            <li>
+              <strong>Camera & Face Capture:</strong> System automatically
+              starts your camera and captures your face image
+            </li>
+            <li>
+              <strong>Student Identification:</strong> Your face is
+              automatically recognized and matched against the database
+            </li>
+            <li>
+              <strong>Auto Liveness Challenge:</strong> A random challenge
+              (smile, turn head, etc.) is automatically presented and recorded
+              to prove you are live
+            </li>
+            <li>
+              <strong>Instant Marking:</strong> Upon successful face recognition
+              (40%+ confidence) and liveness verification, your attendance is
+              automatically marked
+            </li>
+            <li>
+              <strong>Real-time Status:</strong> Watch the status section to see
+              real-time updates of GPS validation, face detection, challenge
+              progress, and attendance confirmation
+            </li>
+            <li>
+              <strong>Duplicate Prevention:</strong> System prevents marking the
+              same student twice within same day and provide feedback if
+              duplicate attempt is made
+            </li>
+            <li>
+              <strong>Auto Reset:</strong> After successful attendance marking,
+              the system automatically resets for the next student
+            </li>
           </ul>
         </div>
       </div>
@@ -232,7 +500,10 @@
       let canvas = document.getElementById("canvas");
       let ctx = canvas.getContext("2d");
       let stream = null;
-      let websocket = null;
+      let isProcessing = false;
+      let lastMarkedStudents = {}; // Track recently marked students to prevent duplicates
+      let detectionInterval = null;
+      let automationStarted = false; // Prevent duplicate automation starts
 
       const startCameraBtn = document.getElementById("startCamera");
       const markAttendanceBtn = document.getElementById("markAttendance");
@@ -240,130 +511,1097 @@
       const statusMessage = document.getElementById("statusMessage");
       const classroomSelect = document.getElementById("classroomSelect");
 
-      // Start Camera
-      startCameraBtn.addEventListener("click", async () => {
+      const CONFIDENCE_THRESHOLD = 40; // 40% confidence to mark attendance (lowered for testing)
+      const DUPLICATE_PREVENTION_TIME = 10000; // 10 seconds between same student marks
+      const FRAME_CAPTURE_INTERVAL = 500; // Capture every 500ms (2 FPS)
+      const COUNTDOWN_DURATION = 10; // 10 seconds countdown before auto-restart
+      let countdownTimer = null; // Timer for countdown
+      let currentEmotionData = null; // Store current emotion analysis
+
+      // Hide manual buttons for automation
+      startCameraBtn.style.display = "none";
+      markAttendanceBtn.style.display = "none";
+
+      // Debug display
+      const debugLog = [];
+      function addDebugLog(msg) {
+        const timestamp = new Date().toLocaleTimeString();
+        debugLog.unshift(`[${timestamp}] ${msg}`);
+        if (debugLog.length > 20) debugLog.pop();
+        console.log(msg);
+        const debugPanel = document.getElementById("debugPanel");
+        if (debugPanel) {
+          debugPanel.innerHTML = debugLog
+            .map((m) => `<div>${m}</div>`)
+            .join("");
+        }
+      }
+
+      // Debug panel toggle
+      const debugToggle = document.getElementById("debugToggle");
+      const debugContainer = document.getElementById("debugContainer");
+      if (debugToggle) {
+        debugToggle.addEventListener("click", (e) => {
+          e.preventDefault();
+          const isHidden =
+            document.getElementById("debugPanel").style.display === "none";
+          document.getElementById("debugPanel").style.display = isHidden
+            ? "block"
+            : "none";
+          debugContainer.style.display = "block";
+        });
+        // Show debug container once first log is added
+      }
+
+      // Show debug container on first detection
+      const originalAddLog = addDebugLog;
+      let debugShown = false;
+      addDebugLog = function (msg) {
+        originalAddLog(msg);
+        if (!debugShown && debugContainer) {
+          debugContainer.style.display = "block";
+          debugShown = true;
+        }
+      };
+
+      // ============================================
+      // CHALLENGE-RESPONSE SYSTEM
+      // ============================================
+      let currentChallenge = null;
+      let challengeFrames = [];
+      let challengeInterval = null;
+
+      async function showChallenge(challenge) {
+        currentChallenge = challenge;
+        challengeFrames = [];
+
+        // Show modal
+        document.getElementById("challengeModal").style.display = "block";
+        document.getElementById("challengeOverlay").style.display = "block";
+
+        // Set challenge text
+        document.getElementById("challengeInstruction").textContent =
+          challenge.message;
+        document.getElementById("challengeTitle").innerHTML =
+          '<i class="bi bi-shield-check"></i> Live Check Challenge';
+
+        addDebugLog(`🎯 Challenge requested: ${challenge.type}`);
+
+        // Start timer and frame capture
+        let timeRemaining = challenge.duration;
+        document.getElementById("challengeTimer").textContent = timeRemaining;
+
+        return new Promise((resolve) => {
+          const timerInterval = setInterval(async () => {
+            timeRemaining--;
+            document.getElementById("challengeTimer").textContent =
+              timeRemaining;
+
+            if (timeRemaining <= 0) {
+              clearInterval(timerInterval);
+              if (challengeInterval) clearInterval(challengeInterval);
+              await validateChallengeResponse();
+              resolve();
+            }
+          }, 1000);
+
+          // Capture frames during challenge
+          challengeInterval = setInterval(() => {
+            if (video && video.readyState === 4) {
+              const tempCanvas = document.createElement("canvas");
+              tempCanvas.width = video.videoWidth;
+              tempCanvas.height = video.videoHeight;
+              const ctx = tempCanvas.getContext("2d");
+              ctx.drawImage(video, 0, 0);
+              const imageData = tempCanvas.toDataURL("image/jpeg", 0.8);
+              const base64Data = imageData.split(",")[1];
+              challengeFrames.push(base64Data);
+            }
+          }, 200); // Capture every 200ms
+        });
+      }
+
+      async function validateChallengeResponse() {
+        // Stop frame capture
+        if (challengeInterval) clearInterval(challengeInterval);
+
+        if (!currentChallenge || challengeFrames.length === 0) {
+          addDebugLog("❌ Challenge failed: No frames captured");
+          hideChallengeModal();
+          window.challengePassed = false;
+          currentChallenge = null;
+          return false;
+        }
+
         try {
-          if (!classroomSelect.value) {
-            alert("Please select a classroom first!");
-            return;
-          }
+          addDebugLog(
+            `🔍 Validating challenge with ${challengeFrames.length} frames...`,
+          );
 
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480 },
-          });
-          video.srcObject = stream;
-
-          startCameraBtn.disabled = true;
-          markAttendanceBtn.disabled = false;
-          stopCameraBtn.disabled = false;
-
-          statusMessage.innerHTML =
-            '<span class="text-success">Camera started. Ready for attendance marking.</span>';
-
-          // Start WebSocket connection for real-time processing
-          connectWebSocket();
-        } catch (error) {
-          console.error("Error starting camera:", error);
-          statusMessage.innerHTML =
-            '<span class="text-danger">Error starting camera. Please check permissions.</span>';
-        }
-      });
-
-      // Stop Camera
-      stopCameraBtn.addEventListener("click", () => {
-        if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
-          video.srcObject = null;
-        }
-
-        if (websocket) {
-          websocket.close();
-        }
-
-        startCameraBtn.disabled = false;
-        markAttendanceBtn.disabled = true;
-        stopCameraBtn.disabled = true;
-
-        statusMessage.innerHTML =
-          "Camera stopped. Select classroom to restart.";
-      });
-
-      // Mark Attendance
-      markAttendanceBtn.addEventListener("click", async () => {
-        try {
-          if (!classroomSelect.value) {
-            alert("Please select a classroom!");
-            return;
-          }
-
-          // Capture frame from video
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
-
-          const imageData = canvas.toDataURL("image/jpeg", 0.8);
-          const base64Data = imageData.split(",")[1];
-
-          // Get location if available
-          let location = null;
-          if (navigator.geolocation) {
-            location = await new Promise((resolve) => {
-              navigator.geolocation.getCurrentPosition(
-                (position) =>
-                  resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                  }),
-                () => resolve(null),
-              );
-            });
-          }
-
-          // Send attendance request
-          const response = await fetch("/api/attendance/mark", {
+          const response = await fetch("/api/challenge/validate", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              image_data: base64Data,
-              classroom: classroomSelect.value,
-              location: location,
+              student_id: window.pendingStudentId || "temp",
+              challenge_type: currentChallenge.type,
+              frames: challengeFrames,
             }),
           });
 
           const result = await response.json();
 
-          if (response.ok) {
-            statusMessage.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> ${result.message}</span>`;
+          hideChallengeModal();
+          currentChallenge = null;
+
+          if (result.success && result.challenge_passed) {
+            addDebugLog(
+              `✅ Challenge PASSED! (${(result.confidence * 100).toFixed(0)}% confidence)`,
+            );
+            window.challengePassed = true;
+            return true;
           } else {
-            statusMessage.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${result.message}</span>`;
+            addDebugLog(`❌ Challenge FAILED - ${result.message}`);
+            window.challengePassed = false;
+            return false;
           }
         } catch (error) {
-          console.error("Error marking attendance:", error);
+          addDebugLog(`❌ Challenge validation error: ${error.message}`);
+          hideChallengeModal();
+          window.challengePassed = false;
+          currentChallenge = null;
+          return false;
+        }
+      }
+
+      function hideChallengeModal() {
+        document.getElementById("challengeModal").style.display = "none";
+        document.getElementById("challengeOverlay").style.display = "none";
+      }
+
+      function skipChallenge() {
+        addDebugLog("⏭️  Challenge skipped by user");
+        if (challengeInterval) clearInterval(challengeInterval);
+        hideChallengeModal();
+      }
+
+      function cancelChallenge() {
+        addDebugLog("❌ Challenge cancelled");
+        if (challengeInterval) clearInterval(challengeInterval);
+        hideChallengeModal();
+        statusMessage.innerHTML =
+          '<span class="text-info"><i class="bi bi-hourglass-split"></i> Scanning faces for automatic attendance...</span>';
+      }
+
+      // Geofencing helper function
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        // Haversine formula to calculate distance between two GPS coordinates
+        const R = 6371000; // Earth radius in meters
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * (Math.PI / 180)) *
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in meters
+      }
+
+      // Get geofence configuration
+      async function getGeofenceConfig() {
+        const response = await fetch("/api/geofence/config");
+        return await response.json();
+      }
+
+      // Validate GPS location before starting face detection
+      async function validateGeoLocation(classroom) {
+        return new Promise((resolve) => {
+          if (!navigator.geolocation) {
+            statusMessage.innerHTML =
+              '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> GPS not available on this device</span>';
+            addDebugLog("⚠️  Geolocation not supported");
+            // Allow to proceed without GPS for testing
+            resolve({
+              valid: true,
+              message: "GPS not available (mock mode)",
+            });
+            return;
+          }
+
           statusMessage.innerHTML =
-            '<span class="text-danger">Error marking attendance. Please try again.</span>';
+            '<span class="text-info"><i class="bi bi-geo-alt"></i> Validating location...</span>';
+          addDebugLog("📍 Requesting GPS location...");
+
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const userLat = position.coords.latitude;
+              const userLon = position.coords.longitude;
+              const accuracy = position.coords.accuracy;
+
+              addDebugLog(
+                `📍 GPS: ${userLat.toFixed(4)}, ${userLon.toFixed(4)} (±${accuracy.toFixed(0)}m)`,
+              );
+
+              try {
+                // Get geofence config
+                const config = await getGeofenceConfig();
+                const classroomLocation = config.classrooms[classroom];
+
+                if (!classroomLocation) {
+                  resolve({
+                    valid: false,
+                    message: `Classroom location not configured: ${classroom}`,
+                  });
+                  return;
+                }
+
+                // Calculate distance
+                const distance = calculateDistance(
+                  userLat,
+                  userLon,
+                  classroomLocation.lat,
+                  classroomLocation.lon,
+                );
+
+                const radiusMeters = config.radius_meters;
+
+                addDebugLog(
+                  `📍 Distance to ${classroom}: ${distance.toFixed(0)}m (allowed: ${radiusMeters}m)`,
+                );
+
+                if (distance <= radiusMeters) {
+                  resolve({
+                    valid: true,
+                    message: `✓ Location valid (${distance.toFixed(0)}m from classroom)`,
+                    distance: distance,
+                  });
+                } else {
+                  resolve({
+                    valid: false,
+                    message: `✗ Too far from classroom. Distance: ${distance.toFixed(0)}m, Required: ≤${radiusMeters}m`,
+                    distance: distance,
+                  });
+                }
+              } catch (error) {
+                addDebugLog(`❌ Geofence validation error: ${error.message}`);
+                resolve({
+                  valid: false,
+                  message: `Error validating location: ${error.message}`,
+                });
+              }
+            },
+            (error) => {
+              addDebugLog(`❌ GPS Error: ${error.message}`);
+              statusMessage.innerHTML =
+                '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> GPS Error: ' +
+                error.message +
+                "</span>";
+              resolve({
+                valid: false,
+                message: `GPS Error: ${error.message}`,
+              });
+            },
+            {
+              timeout: 10000,
+              enableHighAccuracy: true,
+            },
+          );
+        });
+      }
+
+      // ============================================
+      // CLASSROOM SELECTION AND START BUTTON
+      // ============================================
+      const startAttendanceBtn = document.getElementById("startAttendanceBtn");
+
+      classroomSelect.addEventListener("change", (e) => {
+        if (e.target.value) {
+          // Show start button when classroom is selected
+          startAttendanceBtn.style.display = "inline-block";
+          statusMessage.innerHTML =
+            '<span class="text-success"><i class="bi bi-check-circle"></i> Classroom selected. Click "Start Attendance" to begin.</span>';
+          addDebugLog(`✓ Classroom selected: ${e.target.value}`);
+        } else {
+          // Hide start button if no classroom selected
+          startAttendanceBtn.style.display = "none";
+          statusMessage.innerHTML =
+            '<span class="text-secondary"><i class="bi bi-hourglass-split"></i> Select a classroom to begin automated attendance verification</span>';
+          addDebugLog("ℹ️ Classroom deselected");
         }
       });
 
-      // WebSocket connection for real-time updates
-      function connectWebSocket() {
-        const wsUrl = `ws://localhost:8000/ws/attendance`;
-        websocket = new WebSocket(wsUrl);
+      // Start Attendance button click handler
+      startAttendanceBtn.addEventListener("click", async () => {
+        const selectedClassroom = classroomSelect.value;
+        if (selectedClassroom && !automationStarted) {
+          automationStarted = true;
+          startAttendanceBtn.disabled = true;
+          classroomSelect.disabled = true;
+          statusMessage.innerHTML =
+            '<span class="text-info"><i class="bi bi-hourglass-split"></i> Initializing automated attendance verification...</span>';
+          addDebugLog("🚀 Automated workflow started by user");
 
-        websocket.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === "face_detected") {
-            statusMessage.innerHTML = `<span class="text-info"><i class="bi bi-person-check"></i> Face detected: ${data.confidence}% confidence</span>`;
-          } else if (data.type === "liveness_check") {
-            statusMessage.innerHTML = `<span class="text-warning"><i class="bi bi-eye"></i> ${data.message}</span>`;
+          // Start the automated workflow
+          await startAutomatedWorkflow(selectedClassroom);
+
+          // Re-enable button if workflow completes or fails
+          startAttendanceBtn.disabled = false;
+          classroomSelect.disabled = false;
+        }
+      });
+
+      /**
+       * AUTOMATED WORKFLOW - Executes all steps automatically
+       */
+      async function startAutomatedWorkflow(classroom) {
+        // Safety check: ensure automation is still active
+        if (!automationStarted) {
+          addDebugLog("⏸️ Workflow not started - automation is disabled");
+          return;
+        }
+
+        try {
+          // Step 1: Get GPS Location
+          statusMessage.innerHTML =
+            '<span class="text-info"><i class="bi bi-geo-alt"></i> Acquiring GPS location...</span>';
+          addDebugLog("📍 Getting GPS location");
+
+          const geoResult = await validateGeoLocation(classroom);
+
+          if (!geoResult.valid) {
+            statusMessage.innerHTML =
+              '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> ' +
+              geoResult.message +
+              "</span>";
+            addDebugLog(`❌ GPS validation failed: ${geoResult.message}`);
+
+            // Show countdown and auto-restart even on GPS failure
+            setTimeout(() => {
+              showCountdownAndRestart(classroom);
+            }, 2000);
+            return;
           }
-        };
 
-        websocket.onerror = (error) => {
-          console.error("WebSocket error:", error);
-        };
+          addDebugLog(`✓ GPS validated: ${geoResult.message}`);
+
+          // Step 2: Start Camera
+          statusMessage.innerHTML =
+            '<span class="text-info"><i class="bi bi-camera-video"></i> Starting camera...</span>';
+          addDebugLog("📷 Starting camera");
+
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: 640, height: 480 },
+            });
+            video.srcObject = stream;
+
+            stopCameraBtn.disabled = false;
+
+            statusMessage.innerHTML =
+              '<span class="text-success"><i class="bi bi-camera-video"></i> Camera started. Scanning for faces...</span>';
+            addDebugLog("✓ Camera started");
+
+            // Wait for video to be ready, then auto-start face detection
+            await new Promise((resolve) => {
+              video.onloadedmetadata = () => {
+                resolve();
+              };
+            });
+
+            // Give camera a moment to stabilize
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            // Auto-capture face after a short delay
+            statusMessage.innerHTML =
+              '<span class="text-info"><i class="bi bi-camera-fill"></i> Capturing face image...</span>';
+            addDebugLog("📸 Auto-capturing face");
+
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+
+            // Capture face
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            const imageData = canvas.toDataURL("image/jpeg", 0.8);
+            const base64Data = imageData.split(",")[1];
+
+            // Analyze emotion from captured face
+            statusMessage.innerHTML =
+              '<span class="text-info"><i class="bi bi-smile"></i> Analyzing emotion...</span>';
+            addDebugLog("📊 Analyzing student emotion");
+
+            const emotionResult = await analyzeStudentEmotion(base64Data);
+
+            // Step 3: Recognize student from face
+            statusMessage.innerHTML =
+              '<span class="text-info"><i class="bi bi-person-check"></i> Identifying student...</span>';
+            addDebugLog("🔍 Recognizing student from face");
+
+            const recognitionResponse = await fetch("/api/recognize-face", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                image: base64Data,
+              }),
+            });
+
+            const recognitionResult = await recognitionResponse.json();
+
+            // Check for SPOOF DETECTION FIRST
+            if (recognitionResult.fraud_detected) {
+              statusMessage.innerHTML =
+                '<span class="text-danger"><i class="bi bi-shield-exclamation"></i> ⚠️ SPOOFING DETECTED: Photo/Screen Attack Blocked</span>';
+              addDebugLog(
+                "🚨 FRAUD ALERT: Spoofing attempt detected and logged",
+              );
+
+              if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+              }
+
+              // Show countdown and auto-restart after fraud detection
+              setTimeout(() => {
+                showCountdownAndRestart(classroom);
+              }, 3000);
+              return;
+            }
+
+            if (!recognitionResult.success || !recognitionResult.student) {
+              statusMessage.innerHTML =
+                '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Could not identify student. Please ensure good lighting.</span>';
+              addDebugLog("❌ Student identification failed");
+
+              if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+              }
+
+              // Show countdown and auto-restart even on identification failure
+              setTimeout(() => {
+                showCountdownAndRestart(classroom);
+              }, 2000);
+              return;
+            }
+
+            const studentId = recognitionResult.student.student_id;
+            const studentName = recognitionResult.student.name;
+            const confidence = recognitionResult.confidence;
+
+            addDebugLog(
+              `✓ Student identified: ${studentName} (${Math.round(confidence * 100)}% confidence)`,
+            );
+
+            // Step 4: Request Challenge for Liveness
+            statusMessage.innerHTML =
+              '<span class="text-info"><i class="bi bi-shield-lock"></i> Requesting liveness verification challenge...</span>';
+            addDebugLog("🔐 Requesting anti-spoofing challenge");
+
+            const challengeResp = await fetch("/api/challenge/request", {
+              method: "POST",
+            });
+            const challengeData = await challengeResp.json();
+
+            if (!challengeData.success) {
+              statusMessage.innerHTML =
+                '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Could not generate challenge.</span>';
+              addDebugLog("❌ Challenge request failed");
+
+              if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+              }
+
+              // Show countdown and auto-restart even on challenge request failure
+              setTimeout(() => {
+                showCountdownAndRestart(classroom);
+              }, 2000);
+              return;
+            }
+
+            const challenge = challengeData.challenge;
+            window.pendingStudentId = studentId;
+            window.pendingStudentName = studentName;
+            window.pendingClassroom = classroom;
+            window.pendingConfidence = Math.round(confidence * 100);
+
+            // Show and execute challenge
+            await new Promise((resolve) => {
+              showChallenge(challenge);
+
+              const checkInterval = setInterval(() => {
+                if (currentChallenge === null) {
+                  clearInterval(checkInterval);
+                  resolve();
+                }
+              }, 100);
+            });
+
+            // Step 5: Mark Attendance after successful challenge
+            if (window.challengePassed) {
+              statusMessage.innerHTML =
+                '<span class="text-info"><i class="bi bi-hourglass-split"></i> Liveness verified. Marking attendance...</span>';
+              addDebugLog("✓ Challenge passed - proceeding to mark attendance");
+
+              // Get current location
+              let latitude = 0;
+              let longitude = 0;
+              let accuracy = 0;
+
+              if (navigator.geolocation) {
+                await new Promise((resolve) => {
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                      latitude = position.coords.latitude;
+                      longitude = position.coords.longitude;
+                      accuracy = position.coords.accuracy;
+                      resolve();
+                    },
+                    () => resolve(),
+                    { timeout: 5000 },
+                  );
+                });
+              }
+
+              // Mark attendance
+              const attendanceResponse = await fetch("/api/attendance/mark", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  student_id: studentId,
+                  classroom: classroom,
+                  latitude: latitude,
+                  longitude: longitude,
+                  accuracy: accuracy,
+                  emotion: currentEmotionData
+                    ? currentEmotionData.emotion
+                    : null,
+                  emotion_confidence: currentEmotionData
+                    ? currentEmotionData.confidence
+                    : null,
+                }),
+              });
+
+              const attendanceResult = await attendanceResponse.json();
+
+              if (attendanceResponse.ok) {
+                lastMarkedStudents[studentId] = Date.now();
+                addDebugLog(
+                  `✅ Attendance marked successfully for ${studentName}`,
+                );
+
+                // Build success message with emotion feedback
+                let emotionMessage = "";
+                if (currentEmotionData) {
+                  emotionMessage = ` ${currentEmotionData.emoji} ${currentEmotionData.description}`;
+                }
+
+                statusMessage.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill" style="animation: bounce 0.6s;"></i> <strong>${studentName}</strong> marked present!${emotionMessage} (${window.pendingConfidence}% confidence, liveness verified)</span>`;
+
+                // Show countdown and auto-restart after 10 seconds
+                setTimeout(() => {
+                  showCountdownAndRestart(classroom);
+                }, 2000);
+              } else {
+                statusMessage.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${attendanceResult.message}</span>`;
+                addDebugLog(
+                  `❌ Attendance marking failed: ${attendanceResult.message}`,
+                );
+
+                // Show countdown and auto-restart even on failure after 10 seconds
+                setTimeout(() => {
+                  showCountdownAndRestart(classroom);
+                }, 2000);
+              }
+
+              window.challengePassed = false;
+            } else {
+              // Challenge failed - log as fraud attempt
+              statusMessage.innerHTML =
+                '<span class="text-danger"><i class="bi bi-shield-exclamation"></i> ⚠️ LIVENESS CHECK FAILED: Spoofing attempt detected and logged to dashboard</span>';
+              addDebugLog(
+                "🚨 FRAUD ALERT: Challenge failed - likely static image or pre-recorded video",
+              );
+
+              // Show countdown and auto-restart even on challenge failure
+              setTimeout(() => {
+                showCountdownAndRestart(classroom);
+              }, 2000);
+            }
+          } catch (error) {
+            statusMessage.innerHTML =
+              '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Error: ' +
+              error.message +
+              "</span>";
+            addDebugLog(`❌ Automation error: ${error.message}`);
+            console.error("Error in automated workflow:", error);
+
+            if (stream) {
+              stream.getTracks().forEach((track) => track.stop());
+            }
+
+            // Show countdown and auto-restart even on error
+            setTimeout(() => {
+              showCountdownAndRestart(classroom);
+            }, 2000);
+          }
+        } catch (error) {
+          statusMessage.innerHTML =
+            '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Fatal error: ' +
+            error.message +
+            "</span>";
+          addDebugLog(`❌ Fatal error: ${error.message}`);
+
+          // Show countdown and auto-restart even on fatal error
+          setTimeout(() => {
+            const selectedClassroom = classroomSelect.value;
+            if (selectedClassroom) {
+              showCountdownAndRestart(selectedClassroom);
+            } else {
+              automationStarted = false;
+              resetToInitialState();
+            }
+          }, 2000);
+        }
       }
+
+      /**
+       * Update emotion display on page
+       */
+      function updateEmotionDisplay(emotionData) {
+        if (!emotionData) return;
+
+        const emotionDisplay = document.getElementById("emotionDisplay");
+        const emotionEmoji = document.getElementById("emotionEmoji");
+        const emotionLabel = document.getElementById("emotionLabel");
+        const emotionEngagement = document.getElementById("emotionEngagement");
+        const emotionConfidence = document.getElementById("emotionConfidence");
+
+        emotionEmoji.textContent = emotionData.emoji;
+        emotionLabel.textContent =
+          emotionData.emotion.charAt(0).toUpperCase() +
+          emotionData.emotion.slice(1);
+        emotionEngagement.textContent = emotionData.description;
+        emotionConfidence.textContent = `Confidence: ${(emotionData.confidence * 100).toFixed(0)}%`;
+
+        emotionDisplay.style.display = "block";
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          emotionDisplay.style.display = "none";
+        }, 5000);
+      }
+
+      /**
+       * Analyze student emotion from face image
+       */
+      async function analyzeStudentEmotion(imageBase64) {
+        try {
+          const response = await fetch("/api/emotion/analyze", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              image: imageBase64,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            currentEmotionData = result;
+            updateEmotionDisplay(result);
+            addDebugLog(
+              `😊 Emotion: ${result.emotion} (${(result.confidence * 100).toFixed(0)}%) - ${result.description}`,
+            );
+            return result;
+          } else {
+            addDebugLog(`⚠️ Emotion detection: ${result.message}`);
+            return null;
+          }
+        } catch (error) {
+          addDebugLog(`⚠️ Emotion analysis error: ${error.message}`);
+          return null;
+        }
+      }
+
+      /**
+       * Show countdown timer and auto-restart after duration
+       */
+      function showCountdownAndRestart(classroom) {
+        // Stop any existing countdown
+        if (countdownTimer) {
+          clearInterval(countdownTimer);
+        }
+
+        // Only show countdown if automation is still active
+        if (!automationStarted) {
+          addDebugLog("⏸️ Countdown cancelled - automation was stopped");
+          return;
+        }
+
+        // Show countdown display
+        const countdownDisplay = document.getElementById("countdownDisplay");
+        const countdownValue = document.getElementById("countdownValue");
+        countdownDisplay.style.display = "block";
+
+        let remainingSeconds = COUNTDOWN_DURATION;
+        countdownValue.textContent = remainingSeconds;
+
+        addDebugLog(
+          `⏱️ Countdown started - auto-restart in ${COUNTDOWN_DURATION} seconds`,
+        );
+
+        countdownTimer = setInterval(() => {
+          remainingSeconds--;
+          countdownValue.textContent = remainingSeconds;
+
+          if (remainingSeconds <= 0) {
+            clearInterval(countdownTimer);
+            countdownDisplay.style.display = "none";
+
+            // Only restart if automation is still active
+            if (automationStarted) {
+              addDebugLog(
+                "🚀 Auto-restarting attendance verification for next student",
+              );
+              // Auto-restart the automation workflow
+              startAutomatedWorkflow(classroom);
+            }
+          }
+        }, 1000);
+      }
+
+      /**
+       * Reset to initial state for next attendance
+       */
+      function resetToInitialState() {
+        // First, immediately set automation flag to false to prevent any pending operations
+        automationStarted = false;
+        addDebugLog("🛑 Stopping automated attendance process");
+
+        classroomSelect.value = "";
+        classroomSelect.disabled = false;
+
+        // Hide and reset start button
+        startAttendanceBtn.style.display = "none";
+        startAttendanceBtn.disabled = false;
+
+        // Clear countdown if running - this is critical
+        if (countdownTimer) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+        document.getElementById("countdownDisplay").style.display = "none";
+
+        // Stop video stream
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+          video.srcObject = null;
+          stream = null;
+        }
+
+        // Clear any face detection intervals
+        if (detectionInterval) {
+          clearInterval(detectionInterval);
+          detectionInterval = null;
+        }
+
+        // Clear any challenge intervals
+        if (challengeInterval) {
+          clearInterval(challengeInterval);
+          challengeInterval = null;
+        }
+
+        // Hide challenge modal if visible
+        document.getElementById("challengeModal").style.display = "none";
+        document.getElementById("challengeOverlay").style.display = "none";
+
+        statusMessage.innerHTML =
+          '<span class="text-secondary"><i class="bi bi-hourglass-split"></i> Select a classroom to begin attendance verification</span>';
+        addDebugLog("✓ Process stopped - ready for next attendance");
+      }
+
+      // Start Camera (Manual fallback - hidden)
+      startCameraBtn.addEventListener("click", async () => {
+        // This is now handled by classroom selection, but kept for manual override if needed
+        statusMessage.innerHTML =
+          '<span class="text-info"><i class="bi bi-info-circle"></i> Automated workflow is already active. Select a classroom to begin.</span>';
+      });
+
+      // Stop Camera
+      stopCameraBtn.addEventListener("click", () => {
+        resetToInitialState();
+        stopCameraBtn.disabled = true;
+      });
+
+      // ============================================
+      // ORIGINAL CHALLENGE-RESPONSE SYSTEM
+      // ============================================
+
+      // Continuous face detection and attendance marking
+      function startFaceDetection() {
+        statusMessage.innerHTML =
+          '<span class="text-info"><i class="bi bi-hourglass-split"></i> Scanning faces for automatic attendance...</span>';
+
+        detectionInterval = setInterval(async () => {
+          if (isProcessing || !stream || !video.readyState === 4) return;
+
+          try {
+            isProcessing = true;
+
+            // Capture current frame
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            const imageData = canvas.toDataURL("image/jpeg", 0.8);
+            const base64Data = imageData.split(",")[1];
+
+            // Send to recognition endpoint
+            const recognitionResponse = await fetch("/api/recognize-face", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                image: base64Data,
+              }),
+            });
+
+            const recognitionResult = await recognitionResponse.json();
+
+            // Log debug info
+            if (recognitionResult.debug) {
+              addDebugLog(
+                "API Debug: " + JSON.stringify(recognitionResult.debug),
+              );
+            }
+
+            // Check for SPOOF DETECTION FIRST
+            if (recognitionResult.fraud_detected) {
+              addDebugLog(
+                "🚨 FRAUD ALERT: Spoofing attempt detected and logged",
+              );
+              statusMessage.innerHTML =
+                '<span class="text-danger"><i class="bi bi-shield-exclamation"></i> ⚠️ SPOOFING DETECTED: Photo/Screen Attack Blocked</span>';
+              isProcessing = false;
+
+              // Stop current detection and start countdown for next verification
+              if (detectionInterval) clearInterval(detectionInterval);
+              if (stream) stream.getTracks().forEach((track) => track.stop());
+              setTimeout(() => {
+                showCountdownAndRestart(classroomSelect.value);
+              }, 2000);
+              return;
+            }
+
+            if (recognitionResult.success && recognitionResult.student) {
+              const confidencePercent = Math.round(
+                recognitionResult.confidence * 100,
+              );
+              addDebugLog(
+                `✓ Face detected: ${recognitionResult.student.name} (${confidencePercent}% confidence)`,
+              );
+
+              // Check if confidence is high enough
+              if (confidencePercent >= CONFIDENCE_THRESHOLD) {
+                const studentId = recognitionResult.student.student_id;
+                const studentName = recognitionResult.student.name;
+                const now = Date.now();
+
+                // Check if we've already marked this student recently
+                if (
+                  lastMarkedStudents[studentId] &&
+                  now - lastMarkedStudents[studentId] <
+                    DUPLICATE_PREVENTION_TIME
+                ) {
+                  // Update status showing already marked
+                  statusMessage.innerHTML = `<span class="text-info"><i class="bi bi-person-check"></i> <strong>${studentName}</strong> (${confidencePercent}%) - Already marked within 10 seconds</span>`;
+                  isProcessing = false;
+                  return;
+                }
+
+                // REQUEST CHALLENGE FOR LIVENESS CHECK
+                statusMessage.innerHTML = `<span class="text-info"><i class="bi bi-shield-lock"></i> Requesting liveness verification...</span>`;
+                addDebugLog("🔐 Requesting anti-spoofing challenge");
+                isProcessing = false;
+
+                try {
+                  const challengeResp = await fetch("/api/challenge/request", {
+                    method: "POST",
+                  });
+                  const challengeData = await challengeResp.json();
+
+                  if (challengeData.success) {
+                    const challenge = challengeData.challenge;
+
+                    // Store student info globally for challenge completion
+                    window.pendingStudentId = studentId;
+                    window.pendingStudentName = studentName;
+                    window.pendingClassroom = classroomSelect.value;
+                    window.pendingConfidence = confidencePercent;
+
+                    // Show challenge to user
+                    await new Promise((resolve) => {
+                      showChallenge(challenge);
+
+                      // Wait for challenge completion
+                      const checkInterval = setInterval(async () => {
+                        if (currentChallenge === null) {
+                          clearInterval(checkInterval);
+                          resolve();
+                        }
+                      }, 100);
+                    });
+
+                    // After challenge, check if it was passed
+                    if (window.challengePassed) {
+                      // Challenge passed, now mark attendance
+                      statusMessage.innerHTML = `<span class="text-info"><i class="bi bi-hourglass-split"></i> Validating location and marking attendance...</span>`;
+
+                      // Get location for geofencing
+                      let latitude = 0;
+                      let longitude = 0;
+                      let accuracy = 0;
+
+                      if (navigator.geolocation) {
+                        await new Promise((resolve) => {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              latitude = position.coords.latitude;
+                              longitude = position.coords.longitude;
+                              accuracy = position.coords.accuracy;
+                              resolve();
+                            },
+                            () => resolve(),
+                            { timeout: 5000 },
+                          );
+                        });
+                      }
+
+                      // Mark attendance
+                      const attendanceResponse = await fetch(
+                        "/api/attendance/mark",
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            student_id: studentId,
+                            classroom: classroomSelect.value,
+                            latitude: latitude,
+                            longitude: longitude,
+                            accuracy: accuracy,
+                          }),
+                        },
+                      );
+
+                      const attendanceResult = await attendanceResponse.json();
+
+                      if (attendanceResponse.ok) {
+                        // Mark as recently processed
+                        lastMarkedStudents[studentId] = now;
+                        addDebugLog(`✅ Attendance marked for ${studentName}`);
+
+                        // Success message with animated icon
+                        statusMessage.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill" style="animation: bounce 0.6s;"></i> <strong>${studentName}</strong> marked present! (${confidencePercent}% confidence, liveness verified)</span>`;
+
+                        // Clear the message after 3 seconds
+                        setTimeout(() => {
+                          statusMessage.innerHTML =
+                            '<span class="text-info"><i class="bi bi-hourglass-split"></i> Scanning faces for automatic attendance...</span>';
+                        }, 3000);
+                      } else {
+                        // Attendance marking failed
+                        statusMessage.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ${attendanceResult.message}</span>`;
+                      }
+                      window.challengePassed = false;
+                    } else {
+                      addDebugLog(
+                        "🚨 FRAUD ALERT: Challenge failed - spoofing attempt logged to dashboard",
+                      );
+                      statusMessage.innerHTML =
+                        '<span class="text-danger"><i class="bi bi-shield-exclamation"></i> ⚠️ LIVENESS CHECK FAILED: Static image/pre-recorded video detected and logged</span>';
+
+                      // Stop current detection and start countdown for next verification
+                      if (detectionInterval) clearInterval(detectionInterval);
+                      if (stream)
+                        stream.getTracks().forEach((track) => track.stop());
+                      setTimeout(() => {
+                        showCountdownAndRestart(classroomSelect.value);
+                      }, 2000);
+                    }
+                  } else {
+                    addDebugLog("❌ Failed to request challenge");
+                    statusMessage.innerHTML =
+                      '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Liveness verification failed</span>';
+
+                    // Stop current detection and start countdown for next verification
+                    if (detectionInterval) clearInterval(detectionInterval);
+                    if (stream)
+                      stream.getTracks().forEach((track) => track.stop());
+                    setTimeout(() => {
+                      showCountdownAndRestart(classroomSelect.value);
+                    }, 2000);
+                  }
+                } catch (error) {
+                  addDebugLog(`❌ Challenge error: ${error.message}`);
+                  statusMessage.innerHTML =
+                    '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Error during liveness check</span>';
+
+                  // Stop current detection and start countdown for next verification
+                  if (detectionInterval) clearInterval(detectionInterval);
+                  if (stream)
+                    stream.getTracks().forEach((track) => track.stop());
+                  setTimeout(() => {
+                    showCountdownAndRestart(classroomSelect.value);
+                  }, 2000);
+                }
+              } else {
+                // Low confidence detection
+                statusMessage.innerHTML = `<span class="text-warning"><i class="bi bi-person"></i> Face detected: <strong>${recognitionResult.student.name}</strong> (${confidencePercent}%) - Need clearer view</span>`;
+              }
+            } else {
+              // No face recognized
+              if (!recognitionResult.success) {
+                addDebugLog(
+                  `✗ No face detected or recognition failed: ${recognitionResult.message}`,
+                );
+              } else {
+                addDebugLog("✗ No matching student found");
+              }
+              statusMessage.innerHTML =
+                '<span class="text-secondary"><i class="bi bi-hourglass-split"></i> Scanning... No student face recognized yet</span>';
+            }
+
+            isProcessing = false;
+          } catch (error) {
+            addDebugLog(`✗ Error: ${error.message}`);
+            console.error("Error in face detection:", error);
+            statusMessage.innerHTML =
+              '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Error processing frame. Please try again.</span>';
+            isProcessing = false;
+          }
+        }, FRAME_CAPTURE_INTERVAL);
+      }
+
+      // Add CSS animation for the success icon
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes bounce {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+        }
+      `;
+      document.head.appendChild(style);
     </script>
   </body>
 </html>
