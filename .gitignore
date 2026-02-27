@@ -62,3 +62,10 @@ Data & Configuration/data/cached_profiles/
 
 # Chrome driver downloads
 chromedriver*
+
+
+venv/
+__pycache__/
+*.pyd
+*.dll
+*.dat
