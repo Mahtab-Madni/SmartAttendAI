@@ -1,0 +1,3 @@
+"""
+SmartAttendAI Emotion Detection Module
+"""

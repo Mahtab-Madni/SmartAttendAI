@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - SmartAttendAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --success-color: #06d6a0;
+        --danger-color: #ef476f;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding-top: 70px;
+      }
+
+      .navbar {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .main-content {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        font-size: 1.1rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: var(--primary-color);
+      }
+
+      .recent-activity {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+
+      .activity-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+
+      .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      .activity-success {
+        background: var(--success-color);
+      }
+
+      .activity-warning {
+        background: #ffc107;
+      }
+
+      .activity-danger {
+        background: var(--danger-color);
+      }
+
+      .btn-custom {
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary-custom {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        color: white;
+      }
+
+      .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+      }
+
+      .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+
+      .table th {
+        border: none;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        font-size: 0.9rem;
+      }
+
+      .table td {
+        border: none;
+        padding: 15px 12px;
+        vertical-align: middle;
+      }
+
+      .table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .badge-custom {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      .charts-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-shield-check"></i> SmartAttendAI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/mark-attendance">Mark Attendance</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard">Dashboard</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
+          <div>
+            <span class="badge bg-primary">{{ date }}</span>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="bi bi-people"></i>
+              </div>
+              <div class="stat-number" id="totalStudents">
+                {{ total_students }}
+              </div>
+              <div class="stat-label">Total Students</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="bi bi-calendar-check"></i>
+              </div>
+              <div class="stat-number" id="todayAttendance">
+                {{ report.total_attended|default(0) }}
+              </div>
+              <div class="stat-label">Today's Attendance</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="bi bi-shield-exclamation"></i>
+              </div>
+              <div class="stat-number" id="fraudAttempts">0</div>
+              <div class="stat-label">Fraud Attempts</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="bi bi-percent"></i>
+              </div>
+              <div class="stat-number" id="avgConfidence">
+                {{ (report.avg_face_confidence * 100)|round|int if
+                report.avg_face_confidence else 0 }}%
+              </div>
+              <div class="stat-label">Avg. Confidence</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="main-content">
+              <h4><i class="bi bi-lightning"></i> Quick Actions</h4>
+              <div class="d-flex gap-3 flex-wrap">
+                <button
+                  class="btn btn-primary-custom btn-custom"
+                  onclick="exportReport()"
+                >
+                  <i class="bi bi-download"></i> Export Report
+                </button>
+                <button
+                  class="btn btn-primary-custom btn-custom"
+                  onclick="registerStudent()"
+                >
+                  <i class="bi bi-person-plus"></i> Register Student
+                </button>
+                <button
+                  class="btn btn-primary-custom btn-custom"
+                  onclick="viewFraudAttempts()"
+                >
+                  <i class="bi bi-shield-exclamation"></i> View Fraud Attempts
+                </button>
+                <button
+                  class="btn btn-primary-custom btn-custom"
+                  onclick="generateQR()"
+                >
+                  <i class="bi bi-qr-code"></i> Generate QR Code
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+          <h4><i class="bi bi-clock-history"></i> Recent Activity</h4>
+          <div id="recentActivity">
+            <div class="activity-item">
+              <div class="activity-icon activity-success">
+                <i class="bi bi-check"></i>
+              </div>
+              <div class="flex-grow-1">
+                <strong>John Doe</strong> marked attendance for
+                <em>Computer Science 101</em>
+                <div class="text-muted small">2 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon activity-warning">
+                <i class="bi bi-exclamation"></i>
+              </div>
+              <div class="flex-grow-1">
+                <strong>Fraud Attempt</strong> detected in
+                <em>Mathematics Lab</em>
+                <div class="text-muted small">15 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon activity-success">
+                <i class="bi bi-check"></i>
+              </div>
+              <div class="flex-grow-1">
+                <strong>Jane Smith</strong> registered successfully
+                <div class="text-muted small">1 hour ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="table-container">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4><i class="bi bi-people"></i> Registered Students</h4>
+            <button
+              class="btn btn-primary-custom btn-sm"
+              onclick="refreshStudents()"
+            >
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table" id="studentsTable">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Roll Number</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody">
+                <tr>
+                  <td colspan="6" class="text-center">Loading students...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Charts Container -->
+        <div class="charts-container">
+          <h4><i class="bi bi-bar-chart"></i> Analytics</h4>
+          <div class="row">
+            <div class="col-md-6">
+              <canvas id="attendanceChart" width="400" height="200"></canvas>
+            </div>
+            <div class="col-md-6">
+              <canvas id="fraudChart" width="400" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Register New Student</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="registerForm">
+              <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="studentName"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Student ID</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="studentId"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Roll Number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="rollNumber"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input type="text" class="form-control" id="phone" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="submitRegistration()"
+            >
+              Register
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Initialize dashboard
+      document.addEventListener("DOMContentLoaded", function () {
+        loadStudents();
+        loadRecentActivity();
+        loadFraudAttempts();
+        initializeCharts();
+      });
+
+      // Load students
+      async function loadStudents() {
+        try {
+          const response = await fetch("/api/students");
+          const data = await response.json();
+          const tbody = document.getElementById("studentsTableBody");
+
+          if (data.students && data.students.length > 0) {
+            tbody.innerHTML = data.students
+              .map(
+                (student) => `
+              <tr>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.roll_number || "N/A"}</td>
+                <td>${student.email || "N/A"}</td>
+                <td>
+                  <span class="badge badge-custom bg-success">Active</span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary" onclick="editStudent('${student.student_id}')">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('${student.student_id}')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            `,
+              )
+              .join("");
+          } else {
+            tbody.innerHTML =
+              '<tr><td colspan="6" class="text-center">No students registered</td></tr>';
+          }
+        } catch (error) {
+          console.error("Error loading students:", error);
+          document.getElementById("studentsTableBody").innerHTML =
+            '<tr><td colspan="6" class="text-center text-danger">Error loading students</td></tr>';
+        }
+      }
+
+      // Load recent activity
+      async function loadRecentActivity() {
+        try {
+          const response = await fetch("/api/attendance/recent");
+          const data = await response.json();
+
+          if (data.records && data.records.length > 0) {
+            const activityHTML = data.records
+              .map(
+                (record) => `
+              <div class="activity-item">
+                <div class="activity-icon activity-success">
+                  <i class="bi bi-check"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <strong>${record.student_name}</strong> marked attendance for <em>${record.classroom}</em>
+                  <div class="text-muted small">${new Date(record.timestamp).toLocaleString()}</div>
+                </div>
+              </div>
+            `,
+              )
+              .join("");
+
+            document.getElementById("recentActivity").innerHTML = activityHTML;
+          }
+        } catch (error) {
+          console.error("Error loading recent activity:", error);
+        }
+      }
+
+      // Load fraud attempts count
+      async function loadFraudAttempts() {
+        try {
+          const response = await fetch("/api/fraud/attempts?days=7");
+          const data = await response.json();
+          document.getElementById("fraudAttempts").textContent =
+            data.count || 0;
+        } catch (error) {
+          console.error("Error loading fraud attempts:", error);
+        }
+      }
+
+      // Initialize charts
+      function initializeCharts() {
+        // Attendance Chart
+        const attendanceCtx = document
+          .getElementById("attendanceChart")
+          .getContext("2d");
+        new Chart(attendanceCtx, {
+          type: "line",
+          data: {
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            datasets: [
+              {
+                label: "Daily Attendance",
+                data: [12, 19, 3, 5, 2, 3, 9],
+                borderColor: "#4361ee",
+                backgroundColor: "rgba(67, 97, 238, 0.1)",
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Weekly Attendance Trend",
+              },
+            },
+          },
+        });
+
+        // Fraud Attempts Chart
+        const fraudCtx = document.getElementById("fraudChart").getContext("2d");
+        new Chart(fraudCtx, {
+          type: "doughnut",
+          data: {
+            labels: ["Successful", "Failed", "Fraud Attempts"],
+            datasets: [
+              {
+                data: [85, 10, 5],
+                backgroundColor: ["#06d6a0", "#ffc107", "#ef476f"],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Authentication Success Rate",
+              },
+            },
+          },
+        });
+      }
+
+      // Quick action functions
+      function exportReport() {
+        window.open(`/api/reports/daily/{{ date }}/export`, "_blank");
+      }
+
+      function registerStudent() {
+        new bootstrap.Modal(document.getElementById("registerModal")).show();
+      }
+
+      function viewFraudAttempts() {
+        window.open("/api/fraud/attempts/details", "_blank");
+      }
+
+      function generateQR() {
+        alert("QR Code generation feature coming soon!");
+      }
+
+      function refreshStudents() {
+        loadStudents();
+      }
+
+      // Student management functions
+      async function submitRegistration() {
+        try {
+          const formData = {
+            name: document.getElementById("studentName").value,
+            student_id: document.getElementById("studentId").value,
+            roll_number: document.getElementById("rollNumber").value,
+            email: document.getElementById("email").value,
+            phone: document.getElementById("phone").value,
+          };
+
+          const response = await fetch("/api/students/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert("Student registered successfully!");
+            bootstrap.Modal.getInstance(
+              document.getElementById("registerModal"),
+            ).hide();
+            document.getElementById("registerForm").reset();
+            loadStudents();
+          } else {
+            alert(`Error: ${result.message}`);
+          }
+        } catch (error) {
+          console.error("Error registering student:", error);
+          alert("Error registering student. Please try again.");
+        }
+      }
+
+      function editStudent(studentId) {
+        alert(`Edit student ${studentId} - Feature coming soon!`);
+      }
+
+      async function deleteStudent(studentId) {
+        if (confirm("Are you sure you want to delete this student?")) {
+          try {
+            const response = await fetch(`/api/students/${studentId}`, {
+              method: "DELETE",
+            });
+
+            if (response.ok) {
+              alert("Student deleted successfully!");
+              loadStudents();
+            } else {
+              alert("Error deleting student.");
+            }
+          } catch (error) {
+            console.error("Error deleting student:", error);
+            alert("Error deleting student.");
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

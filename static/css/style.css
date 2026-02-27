@@ -1,0 +1,130 @@
+/* SmartAttendAI Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 800px;
+  width: 90%;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  color: #333;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.video-section {
+  margin-bottom: 2rem;
+}
+
+#video {
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: #f0f0f0;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #1e7e34;
+  transform: translateY(-2px);
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #138496;
+  transform: translateY(-2px);
+}
+
+.status {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #495057;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  #video {
+    width: 100%;
+    height: auto;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn {
+    width: 200px;
+  }
+}

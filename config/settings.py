@@ -1,0 +1,126 @@
+"""
+SmartAttendAI Configuration
+All system settings and constants
+"""
+import os
+from pathlib import Path
+
+# Base Paths
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+MODELS_DIR = BASE_DIR / "models"
+LOGS_DIR = DATA_DIR / "logs"
+FACES_DIR = DATA_DIR / "faces"
+
+# Create directories if they don't exist
+for directory in [DATA_DIR, MODELS_DIR, LOGS_DIR, FACES_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
+
+# Liveness Detection Settings
+LIVENESS_CONFIG = {
+    "EAR_THRESHOLD": 0.25,  # Eye Aspect Ratio threshold for blink detection
+    "CONSECUTIVE_FRAMES": 3,  # Frames to confirm blink
+    "BLINK_TIME_WINDOW": 15,  # Seconds to detect natural blink (increased)
+    "MIN_BLINKS": 2,  # Minimum blinks required (increased security)
+    "MAX_BLINKS": 8,  # Maximum blinks allowed (anti-rapid-blink attack)
+    "MOTION_THRESHOLD": 10,  # Minimum motion between frames
+    "TEXTURE_ANALYSIS": True,  # Enable texture-based spoof detection
+    "CHALLENGE_RESPONSE": True,  # Enable challenge-response verification
+}
+
+# Face Recognition Settings
+FACE_CONFIG = {
+    "TOLERANCE": 0.6,  # Face matching tolerance (lower = stricter)
+    "MODEL": "hog",  # Options: 'hog' (CPU) or 'cnn' (GPU)
+    "JITTERS": 1,  # Number of times to re-sample face for encoding
+    "MIN_FACE_SIZE": (120, 120),  # Minimum face dimensions (increased for better accuracy)
+    "CONFIDENCE_THRESHOLD": 70,  # Minimum confidence for face recognition (0-100)
+    "MAX_FACES_PER_FRAME": 3,  # Maximum faces to process per frame
+    "FACE_PADDING": 20,  # Pixels to add around detected face
+}
+
+# Geofencing Settings
+GEOFENCE_CONFIG = {
+    "RADIUS_METERS": 100,  # Attendance valid within this radius
+    "CLASSROOM_LOCATIONS": {
+        # Default locations - Update these for your institution
+        "Room_101": {"lat": 40.7128, "lon": -74.0060},  # NYC coordinates (example)
+        "Room_102": {"lat": 40.7138, "lon": -74.0050}, 
+        "Lab_A": {"lat": 40.7148, "lon": -74.0040},
+        "Library": {"lat": 40.7158, "lon": -74.0030},
+        "Auditorium": {"lat": 40.7168, "lon": -74.0020},
+    },
+    "GPS_ACCURACY_THRESHOLD": 50,  # Minimum GPS accuracy in meters
+    "MOCK_LOCATION_DETECTION": True,  # Enable developer options detection
+}
+
+# Emotion Analysis Settings
+EMOTION_CONFIG = {
+    "EMOTIONS": ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"],
+    "ANALYSIS_INTERVAL": 30,  # Seconds between emotion captures
+    "REPORT_THRESHOLD": 0.6,  # Confidence threshold for emotion
+}
+
+# Fraud Detection Settings
+FRAUD_CONFIG = {
+    "TEXTURE_THRESHOLD": 0.7,  # CNN model confidence for real vs fake
+    "CHALLENGE_PROBABILITY": 0.3,  # 30% chance of challenge-response
+    "CHALLENGES": [
+        "Please smile",
+        "Please turn your head left",
+        "Please turn your head right",
+        "Please nod your head",
+    ],
+    "ALERT_EMAIL": "admin@smartattendai.com",
+}
+
+# Voice Verification Settings
+VOICE_CONFIG = {
+    "REQUIRED": False,  # Set True to make voice MFA mandatory
+    "TIMEOUT": 5,  # Seconds to record voice
+    "SIMILARITY_THRESHOLD": 0.75,  # Voice match threshold
+}
+
+# Database Settings
+DATABASE_CONFIG = {
+    "TYPE": "sqlite",  # Options: 'sqlite', 'firebase'
+    "SQLITE_PATH": DATA_DIR / "smartattend.db",
+    "FIREBASE_CREDS": BASE_DIR / "config" / "firebase-credentials.json",
+}
+
+# API Keys (Load from environment)
+API_KEYS = {
+    "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN", ""),
+    "TWILIO_ACCOUNT_SID": os.getenv("TWILIO_ACCOUNT_SID", ""),
+    "TWILIO_AUTH_TOKEN": os.getenv("TWILIO_AUTH_TOKEN", ""),
+    "TWILIO_PHONE_NUMBER": os.getenv("TWILIO_PHONE_NUMBER", ""),
+}
+
+# Notification Settings
+NOTIFICATION_CONFIG = {
+    "TELEGRAM_ENABLED": True,
+    "SMS_ENABLED": False,  # Requires Twilio credits
+    "EMAIL_ENABLED": False,
+}
+
+# Server Settings
+SERVER_CONFIG = {
+    "HOST": "0.0.0.0",
+    "PORT": 8000,
+    "DEBUG": True,
+    "RELOAD": True,
+}
+
+# Offline Mode Settings
+OFFLINE_CONFIG = {
+    "ENABLED": True,
+    "SYNC_INTERVAL": 300,  # Seconds between sync attempts
+    "MAX_QUEUE_SIZE": 1000,  # Maximum offline records to store
+}
+
+# Logging Settings
+LOGGING_CONFIG = {
+    "LEVEL": "INFO",
+    "FORMAT": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "FILE": LOGS_DIR / "smartattend.log",
+}

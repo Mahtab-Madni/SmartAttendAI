@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartAttendAI - Home</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3a0ca3;
+        --success-color: #06d6a0;
+        --danger-color: #ef476f;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding-top: 70px;
+      }
+
+      .navbar {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .hero-section {
+        text-align: center;
+        color: white;
+        padding: 60px 20px;
+      }
+
+      .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .hero-section p {
+        font-size: 1.3rem;
+        margin-bottom: 30px;
+      }
+
+      .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-10px);
+      }
+
+      .feature-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+      }
+
+      .btn-primary-custom {
+        background: var(--primary-color);
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary-custom:hover {
+        background: var(--secondary-color);
+        transform: scale(1.05);
+      }
+
+      .stats-container {
+        background: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin: 40px auto;
+        max-width: 1200px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+
+      .stat-label {
+        font-size: 1.1rem;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-shield-check"></i> SmartAttendAI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/mark-attendance">Mark Attendance</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard">Dashboard</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="container">
+        <h1>SmartAttendAI</h1>
+        <p>Robust Attendance System with Liveness Detection & Geo-Fencing</p>
+        <a href="/mark-attendance" class="btn btn-primary-custom btn-lg">
+          <i class="bi bi-camera-video"></i> Mark Attendance
+        </a>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-eye"></i>
+            </div>
+            <h3>Liveness Detection</h3>
+            <p>
+              Advanced anti-spoofing with eye blink detection, texture analysis,
+              and challenge-response verification.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-geo-alt"></i>
+            </div>
+            <h3>Geofencing</h3>
+            <p>
+              GPS-based location verification ensures students are physically
+              present in the classroom.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-emoji-smile"></i>
+            </div>
+            <h3>Emotion Analytics</h3>
+            <p>
+              Track student engagement and emotions throughout the lecture for
+              better teaching insights.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-shield-exclamation"></i>
+            </div>
+            <h3>Fraud Detection</h3>
+            <p>
+              Multi-layer security detects photo attacks, video proxies, and
+              suspicious patterns.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-bell"></i>
+            </div>
+            <h3>Instant Notifications</h3>
+            <p>
+              Telegram and SMS alerts for attendance confirmations and fraud
+              attempts.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-graph-up"></i>
+            </div>
+            <h3>Analytics Dashboard</h3>
+            <p>
+              Comprehensive reports on attendance, engagement, and security
+              incidents.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-container">
+      <div class="row">
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="totalStudents">0</div>
+          <div class="stat-label">Registered Students</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="todayAttendance">0</div>
+          <div class="stat-label">Today's Attendance</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="fraudAttempts">0</div>
+          <div class="stat-label">Fraud Attempts (7 days)</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="avgConfidence">0%</div>
+          <div class="stat-label">Avg. Confidence</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="container mt-5 pb-5 text-center text-white">
+      <p>&copy; 2024 SmartAttendAI. All rights reserved.</p>
+      <p>Made with ❤️ for better education</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Fetch and display stats
+      async function loadStats() {
+        try {
+          // Get students count
+          const studentsResp = await fetch("/api/students");
+          const studentsData = await studentsResp.json();
+          document.getElementById("totalStudents").textContent =
+            studentsData.students.length;
+
+          // Get today's attendance
+          const today = new Date().toISOString().split("T")[0];
+          const attendanceResp = await fetch("/api/attendance/today");
+          const attendanceData = await attendanceResp.json();
+          document.getElementById("todayAttendance").textContent =
+            attendanceData.count;
+
+          // Get fraud attempts
+          const fraudResp = await fetch("/api/fraud/attempts?days=7");
+          const fraudData = await fraudResp.json();
+          document.getElementById("fraudAttempts").textContent =
+            fraudData.count;
+
+          // Get daily report for confidence
+          const reportResp = await fetch(`/api/reports/daily/${today}`);
+          const reportData = await reportResp.json();
+          const confidence = Math.round(reportData.avg_face_confidence * 100);
+          document.getElementById("avgConfidence").textContent =
+            confidence + "%";
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      }
+
+      // Load stats on page load
+      loadStats();
+    </script>
+  </body>
+</html>

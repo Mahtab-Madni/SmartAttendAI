@@ -1,0 +1,3 @@
+"""
+SmartAttendAI Fraud Detection Module
+"""

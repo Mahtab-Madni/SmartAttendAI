@@ -1,0 +1,3 @@
+name,id,roll_number,email,phone,image_path
+John Doe,STU001,22001,john@example.com,+1234567890,data/faces/john_doe.jpg
+Jane Smith,STU002,22002,jane@example.com,+1234567891,data/faces/jane_smith.jpg

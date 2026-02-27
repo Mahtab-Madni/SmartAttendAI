@@ -1,0 +1,3 @@
+"""
+SmartAttendAI Face Recognition Module
+"""

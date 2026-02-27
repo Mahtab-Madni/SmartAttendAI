@@ -1,0 +1,3 @@
+"""
+SmartAttendAI Utilities Module
+"""

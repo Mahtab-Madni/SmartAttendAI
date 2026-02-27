@@ -1,0 +1,54 @@
+# Core Dependencies
+opencv-python
+opencv-contrib-python
+face-recognition
+numpy
+scipy
+cmake
+
+# Deep Learning
+tensorflow
+keras
+torch
+torchvision
+
+# Web Framework
+fastapi
+uvicorn[standard]
+python-multipart
+jinja2
+
+# Database
+sqlalchemy
+firebase-admin
+
+# Geolocation
+geopy
+geocoder
+
+# Image Processing
+Pillow
+scikit-image
+imutils
+
+# Communication APIs
+python-telegram-bot
+twilio
+
+# Utilities
+python-dotenv
+pydantic
+pandas
+matplotlib
+requests
+aiofiles
+
+# Audio Processing (for voice verification)
+librosa
+soundfile
+pydub
+SpeechRecognition
+
+# Testing
+pytest
+pytest-asyncio
