@@ -45,7 +45,7 @@ FACE_CONFIG = {
 
 # Geofencing Settings
 GEOFENCE_CONFIG = {
-    "RADIUS_METERS": 500,  # Attendance valid within this radius (200 meters)
+    "RADIUS_METERS": 200,  # Attendance valid within this radius (200 meters)
     "CLASSROOM_LOCATIONS": {
         # Default locations - Update these for your institution
         "Reading_Room": {"lat": 28.558773, "lon": 77.277969},  
