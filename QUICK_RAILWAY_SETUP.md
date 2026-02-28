@@ -54,13 +54,14 @@ git push origin main
 ### Step 3: Deploy on Railway Dashboard
 
 1. Go to https://railway.app/dashboard
-2. Click **"New Project"** → **"Deploy from GitHub"**  
+2. Click **"New Project"** → **"Deploy from GitHub"**
 3. Authorize Railway to access GitHub
 4. Select your **SmartAttendAI** repository
 5. Select **main** branch
 6. Click **"Deploy"**
 
 Railway will automatically:
+
 - Build the Docker image
 - Install dependencies from `requirements.txt`
 - Start the application using `run.py`
@@ -99,6 +100,7 @@ FRAUD_DETECTION_ENABLED=true
    - Your app will auto-detect and use PostgreSQL
 
 **If using PostgreSQL:**
+
 - In Variables, verify `DATABASE_TYPE=postgresql` is set
 - The `DATABASE_URL` will be auto-populated by Railway
 - Tables will be created automatically on first run
@@ -106,16 +108,19 @@ FRAUD_DETECTION_ENABLED=true
 ### Step 6: Monitor Deployment
 
 **Check Deployment Status:**
+
 - Go to **"Deployments"** tab
 - Status should show **"Active"** (green checkmark)
 - Build should complete in 2-5 minutes
 
 **View Logs:**
+
 - Click **"Logs"** tab
 - Look for: `[OK] SmartAttendAI initialized successfully!`
 - View your app URL in **"Domains"** section
 
 **Health Check:**
+
 ```bash
 curl https://<your-railway-url>/health
 # Should return: {"status": "healthy", ...}
@@ -128,11 +133,13 @@ curl https://<your-railway-url>/health
 ### Build Fails
 
 Check logs for:
+
 - `pip install` errors → Update `requirements.txt`
 - Memory issues → Models too large
 - Missing environment variables → Check step 4
 
 **View detailed logs:**
+
 ```bash
 railway logs --tail 100
 ```
@@ -140,6 +147,7 @@ railway logs --tail 100
 ### App Crashes on Startup
 
 Check logs for:
+
 - `ModuleNotFoundError` → Missing dependency
 - `DatabaseError` → Database connection issue
 - `No module named 'tensorflow'` → Run `pip install tensorflow`
@@ -147,6 +155,7 @@ Check logs for:
 ### Models Not Loading
 
 Models must be in `models/` directory:
+
 - `emotion_model.h5`
 - `spoof_detection_model.h5`
 - `shape_predictor_68_face_landmarks.dat`
@@ -156,13 +165,15 @@ If missing, the app will use fallback methods ✓
 ### Database Connection Issues
 
 **SQLite (Default):**
+
 - Works out of the box
 - Database stored at `data/smartattend.db`
 - **NOTE:** Data lost on redeploy
 
 **PostgreSQL (Recommended for production):**
+
 - Add PostgreSQL service from Railway dashboard
-- `DATABASE_URL` auto-set by Railway  
+- `DATABASE_URL` auto-set by Railway
 - Data persists across redeployments
 
 ---
@@ -172,11 +183,13 @@ If missing, the app will use fallback methods ✓
 ### Access Your App
 
 Open your Railway domain URL:
+
 ```
 https://<your-app-name>.railway.app
 ```
 
 **Default endpoints:**
+
 - Home: `/`
 - Login: `/login`
 - Dashboard: `/dashboard`
@@ -186,6 +199,7 @@ https://<your-app-name>.railway.app
 ### Create Admin User
 
 Via dashboard API:
+
 ```bash
 curl -X POST https://<your-app-name>.railway.app/api/admin/create \
   -H "Content-Type: application/json" \
@@ -200,6 +214,7 @@ curl -X POST https://<your-app-name>.railway.app/api/admin/create \
 ### Monitor Performance
 
 **Railway Dashboard > Metrics:**
+
 - CPU usage
 - Memory usage
 - Requests/second
@@ -212,6 +227,7 @@ curl -X POST https://<your-app-name>.railway.app/api/admin/create \
 ### Scale Your App
 
 In Railway Dashboard:
+
 - **"Services"** → **SmartAttendAI** → **"Settings"**
 - Increase **"Resources"** for GPU/CPU
 
@@ -225,6 +241,7 @@ In Railway Dashboard:
 Railway auto-deploys on push to `main` branch.
 
 To disable:
+
 - **Settings** → Toggle **"Auto-deploy"**
 
 ---
@@ -232,7 +249,7 @@ To disable:
 ## 📝 Important Notes
 
 1. **Models Required**: All ML models must be committed to Git
-2. **SECRET_KEY**: Change it! Generate a new one for production  
+2. **SECRET_KEY**: Change it! Generate a new one for production
 3. **Telegram Bot**: Test in development first
 4. **Database**: Use PostgreSQL for persistent data
 5. **Logs**: Check regularly for errors
@@ -243,7 +260,7 @@ To disable:
 ## ✅ Checklist
 
 - [ ] `.env` file created and filled
-- [ ] SECRET_KEY generated  
+- [ ] SECRET_KEY generated
 - [ ] TELEGRAM_BOT_TOKEN added
 - [ ] Code pushed to GitHub
 - [ ] Railway project created
@@ -260,8 +277,6 @@ To disable:
 - **Railway Docs**: https://docs.railway.app
 - **SmartAttendAI Docs**: See `DOCUMENTATION.md`
 - **GitHub Issues**: Report problems in your repo
-
-
 
 ### Add Environment Variables
 

@@ -34,7 +34,7 @@ LIVENESS_CONFIG = {
 
 # Face Recognition Settings
 FACE_CONFIG = {
-    "TOLERANCE": 0.65,  # Face matching tolerance (lower = stricter) - 0.65 accounts for JSON precision loss
+    "TOLERANCE": 0.6,  # Face matching tolerance (lower = stricter)
     "MODEL": "hog",  # Options: 'hog' (CPU) or 'cnn' (GPU)
     "JITTERS": 1,  # Number of times to re-sample face for encoding
     "MIN_FACE_SIZE": (120, 120),  # Minimum face dimensions (increased for better accuracy)

@@ -57,7 +57,8 @@ class EmotionAnalyzer:
                 if model_path.exists():
                     return load_model(str(model_path))
                 else:
-                    print(f"[EMOTION] Model not found (optional). Using fallback smile/eye detection")
+                    print(f"Emotion model not found at {model_path}")
+                    print("Using fallback emotion detection")
             return None
         except Exception as e:
             print(f"Error loading emotion model: {e}")

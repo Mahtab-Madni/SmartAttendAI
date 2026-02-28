@@ -696,10 +696,7 @@ async def register_student(
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         cv2.imwrite(photo_path, img)
         
-        # IMPORTANT: Add student to database FIRST so encodings can be saved
-        db.add_student(student_id, name, roll_number, email, phone, telegram_id)
-        
-        # Register face - this will save encodings to the database
+        # Register face
         success = face_system.register_face(
             image_path=photo_path,
             student_name=name,
@@ -710,17 +707,12 @@ async def register_student(
         )
         
         if success:
-            # Force reload of face encodings from database to verify persistence
-            print("[REGISTER] Reloading face encodings from database...")
-            face_system.known_encodings.clear()
-            face_system.known_metadata.clear()
-            face_system.load_encodings_from_database()
-            print(f"[REGISTER] Total known encodings after reload: {len(face_system.known_encodings)}")
+            # Add to database with telegram_id
+            db.add_student(student_id, name, roll_number, email, phone, telegram_id)
             
             return {
                 "success": True,
-                "message": f"Student {name} registered successfully",
-                "encodings_loaded": len(face_system.known_encodings)
+                "message": f"Student {name} registered successfully"
             }
         else:
             return {
@@ -729,9 +721,6 @@ async def register_student(
             }
     
     except Exception as e:
-        import traceback
-        print(f"[REGISTER] Error: {e}")
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/recognize-face")

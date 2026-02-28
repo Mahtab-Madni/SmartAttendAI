@@ -110,29 +110,9 @@ class DatabaseBase:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 param = "?" if self.db_type == "sqlite" else "%s"
-                
-                # Try UPDATE first
                 cursor.execute(f"""
                     UPDATE students SET face_encodings = {param} WHERE student_id = {param}
                 """, (encodings_json, student_id))
-                
-                # If no rows were updated, the student might not have been added yet
-                # Log this but don't fail - the encoding will be saved when student is added
-                if cursor.rowcount == 0:
-                    print(f"[DB] Warning: Could not update face encodings for student {student_id} - student may not exist yet")
-                    # Try to log for debugging
-                    try:
-                        # Check if student exists
-                        cursor.execute(f"SELECT student_id FROM students WHERE student_id = {param}", (student_id,))
-                        if cursor.fetchone() is None:
-                            print(f"[DB] Confirmed: Student {student_id} does not exist in database yet")
-                        else:
-                            print(f"[DB] Student {student_id} exists but UPDATE affected 0 rows")
-                    except:
-                        pass
-                else:
-                    print(f"[DB] Successfully saved face encodings for student {student_id}")
-                
                 return cursor.rowcount > 0
         except Exception as e:
             print(f"Error saving face encodings: {e}")
@@ -270,29 +250,18 @@ class DatabaseBase:
                 # Convert boolean for database compatibility
                 if self.db_type == "sqlite":
                     liveness_bool = 1 if liveness_verified else 0
-                else:  # PostgreSQL - use 'true'/'false' with ::boolean cast
-                    liveness_bool = 'true' if liveness_verified else 'false'
+                else:  # PostgreSQL
+                    liveness_bool = "TRUE" if liveness_verified else "FALSE"
                 
-                if self.db_type == "sqlite":
-                    query = f"""
-                        INSERT INTO attendance 
-                        (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
-                         liveness_verified, face_confidence, emotion)
-                        VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
-                    """
-                    params = (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
-                              liveness_bool, face_confidence, emotion)
-                else:  # PostgreSQL - use ::boolean cast for safe conversion
-                    query = f"""
-                        INSERT INTO attendance 
-                        (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
-                         liveness_verified, face_confidence, emotion)
-                        VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}::boolean, {param}, {param})
-                    """
-                    params = (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
-                              liveness_bool, face_confidence, emotion)
+                query = f"""
+                    INSERT INTO attendance 
+                    (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
+                     liveness_verified, face_confidence, emotion)
+                    VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {liveness_bool}, {param}, {param})
+                """
                 
-                cursor.execute(query, params)
+                cursor.execute(query, (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
+                      face_confidence, emotion))
                 return True
         except Exception as e:
             print(f"Error adding attendance: {e}")
@@ -496,54 +465,30 @@ class DatabaseBase:
                 # Convert boolean to appropriate type for database
                 if self.db_type == "sqlite":
                     liveness_bool = 1 if liveness_verified else 0
-                else:  # PostgreSQL - convert to SQL boolean literal
-                    liveness_bool = 'true' if liveness_verified else 'false'
+                else:  # PostgreSQL
+                    liveness_bool = "TRUE" if liveness_verified else "FALSE"
                 
                 # Build INSERT query with proper boolean handling
-                if self.db_type == "sqlite":
-                    query = f"""
-                        INSERT INTO attendance (
-                            student_id, classroom, timestamp, date, time,
-                            latitude, longitude, gps_accuracy,
-                            liveness_verified, face_confidence, emotion
-                        ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
-                    """
-                    params = (
-                        student_id, 
-                        classroom, 
-                        now.isoformat(),
-                        now.date().isoformat(),
-                        now.time().isoformat(),
-                        latitude, 
-                        longitude, 
-                        gps_accuracy,
-                        liveness_bool,
-                        face_confidence, 
-                        emotion
-                    )
-                else:  # PostgreSQL - use ::boolean cast for safe conversion
-                    query = f"""
-                        INSERT INTO attendance (
-                            student_id, classroom, timestamp, date, time,
-                            latitude, longitude, gps_accuracy,
-                            liveness_verified, face_confidence, emotion
-                        ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}::boolean, {param}, {param})
-                    """
-                    params = (
-                        student_id, 
-                        classroom, 
-                        now.isoformat(),
-                        now.date().isoformat(),
-                        now.time().isoformat(),
-                        latitude, 
-                        longitude, 
-                        gps_accuracy,
-                        liveness_bool,
-                        face_confidence, 
-                        emotion
-                    )
+                query = f"""
+                    INSERT INTO attendance (
+                        student_id, classroom, timestamp, date, time,
+                        latitude, longitude, gps_accuracy,
+                        liveness_verified, face_confidence, emotion
+                    ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {liveness_bool}, {param}, {param})
+                """
                 
-                cursor.execute(query, params)
+                cursor.execute(query, (
+                    student_id, 
+                    classroom, 
+                    now.isoformat(),
+                    now.date().isoformat(),
+                    now.time().isoformat(),
+                    latitude, 
+                    longitude, 
+                    gps_accuracy,
+                    face_confidence, 
+                    emotion
+                ))
                 return True
         except Exception as e:
             print(f"Error marking attendance: {e}")

@@ -39,12 +39,12 @@ RUN pip install --upgrade pip setuptools wheel && \
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p config/data/faces config/data/logs data/faces data/logs models
+RUN mkdir -p config/data/faces config/data/logs data/faces data/logs
 
-# Note: ML models (emotion_model.h5, spoof_detection_model.h5, shape_predictor_68_face_landmarks.dat)
-# are not included in the Docker image as they are too large for git (>100MB per file).
-# The system gracefully handles missing models using fallback detection methods.
-# See MODELS.md for instructions on downloading optional models locally.
+# Verify models exist
+RUN test -f models/emotion_model.h5 || echo "Warning: emotion_model.h5 not found" && \
+    test -f models/spoof_detection_model.h5 || echo "Warning: spoof_detection_model.h5 not found" && \
+    test -f models/shape_predictor_68_face_landmarks.dat || echo "Warning: shape_predictor_68_face_landmarks.dat not found"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
