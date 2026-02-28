@@ -37,11 +37,10 @@ class LivenessDetector:
                 self.predictor = dlib.shape_predictor(str(predictor_path))
                 print("[LIVENESS] Shape predictor loaded successfully")
             else:
-                print(f"[LIVENESS] Warning: Shape predictor not found at {predictor_path}")
-                print("[LIVENESS] Liveness detection will use fallback methods")
+                print(f"[LIVENESS] Shape predictor not found (optional). Using fallback blink detection")
         except Exception as e:
-            print(f"[LIVENESS] Warning: Could not load shape predictor: {e}")
-            print("[LIVENESS] Liveness detection will use fallback methods")
+            print(f"[LIVENESS] Could not load shape predictor: {e}")
+            print("[LIVENESS] Using fallback blink detection")
         
         # Eye landmark indices
         self.LEFT_EYE_START = 42
@@ -192,12 +191,11 @@ class TextureAnalyzer:
                 if model_path_obj.exists():
                     return tf.keras.models.load_model(str(model_path_obj))
                 else:
-                    # Return None if model not available
-                    # In production, train this model using real/fake face dataset
-                    print(f"Warning: Texture analysis model not found at {model_path}. Using basic checks.")
+                    # Return None if model not available - fallback to basic texture analysis
+                    print(f"[TEXTURE] Model not found (optional). Using fallback frequency analysis")
                     return None
             else:
-                print("Warning: Texture analysis model not found. Using basic checks.")
+                print("[TEXTURE] Model not found (optional). Using fallback frequency analysis")
                 return None
         except Exception as e:
             print(f"Error loading texture model: {e}")
