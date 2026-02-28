@@ -382,6 +382,158 @@ class DatabaseBase:
         except Exception as e:
             print(f"Error ending session: {e}")
             return False
+    
+    # Additional Attendance Operations
+    
+    def mark_attendance(self, student_id: str, classroom: str,
+                       latitude: float = None, longitude: float = None,
+                       gps_accuracy: float = None, liveness_verified: bool = False,
+                       face_confidence: float = 0.0, emotion: str = None) -> bool:
+        """Mark attendance for a student"""
+        try:
+            now = datetime.now()
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                param = "?" if self.db_type == "sqlite" else "%s"
+                params = (param,) * 11
+                cursor.execute(f"""
+                    INSERT INTO attendance (
+                        student_id, classroom, timestamp, date, time,
+                        latitude, longitude, gps_accuracy,
+                        liveness_verified, face_confidence, emotion
+                    ) VALUES ({', '.join(params)})
+                """, (
+                    student_id, 
+                    classroom, 
+                    now.isoformat(),
+                    now.date().isoformat(),
+                    now.time().isoformat(),
+                    latitude, 
+                    longitude, 
+                    gps_accuracy,
+                    1 if liveness_verified else 0,
+                    face_confidence, 
+                    emotion
+                ))
+                return True
+        except Exception as e:
+            print(f"Error marking attendance: {e}")
+            return False
+    
+    def check_attendance_today(self, student_id: str, classroom: str = None) -> tuple:
+        """Check if student marked attendance today - returns (bool, record_dict)"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                today = datetime.now().date().isoformat()
+                param = "?" if self.db_type == "sqlite" else "%s"
+                
+                if classroom:
+                    cursor.execute(f"""
+                        SELECT * FROM attendance
+                        WHERE student_id = {param}
+                        AND date = {param}
+                        AND classroom = {param}
+                    """, (student_id, today, classroom))
+                else:
+                    cursor.execute(f"""
+                        SELECT * FROM attendance
+                        WHERE student_id = {param}
+                        AND date = {param}
+                    """, (student_id, today))
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    if self.db_type == "sqlite":
+                        return (True, dict(row))
+                    else:
+                        columns = [desc[0] for desc in cursor.description]
+                        return (True, dict(zip(columns, row)))
+                else:
+                    return (False, None)
+        except Exception as e:
+            print(f"Error checking attendance today: {e}")
+            return (False, None)
+    
+    def log_fraud_attempt(self, fraud_type: str, student_id: str = None,
+                         details: str = None, image_path: str = None,
+                         ip_address: str = None, latitude: float = None,
+                         longitude: float = None, severity: str = "medium") -> bool:
+        """Log a fraud attempt"""
+        return self.add_fraud_attempt(student_id, fraud_type, details, image_path, 
+                                      ip_address, latitude, longitude, severity)
+    
+    def generate_daily_report(self, date: str) -> Dict:
+        """Generate comprehensive daily report"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            param = "?" if self.db_type == "sqlite" else "%s"
+            
+            # Total attendance count
+            cursor.execute(f"""
+                SELECT COUNT(DISTINCT student_id) as total_present
+                FROM attendance
+                WHERE date = {param}
+            """, (date,))
+            row = cursor.fetchone()
+            if self.db_type == "sqlite":
+                total_present = row['total_present']
+            else:
+                total_present = row[0] if row else 0
+            
+            # By classroom
+            cursor.execute(f"""
+                SELECT classroom, COUNT(*) as count
+                FROM attendance
+                WHERE date = {param}
+                GROUP BY classroom
+            """, (date,))
+            
+            if self.db_type == "sqlite":
+                by_classroom = {row['classroom']: row['count'] for row in cursor.fetchall()}
+            else:
+                by_classroom = {}
+                for row in cursor.fetchall():
+                    by_classroom[row[0]] = row[1]
+            
+            # Average face confidence
+            cursor.execute(f"""
+                SELECT AVG(face_confidence) as avg_confidence
+                FROM attendance
+                WHERE date = {param}
+            """, (date,))
+            row = cursor.fetchone()
+            if self.db_type == "sqlite":
+                avg_confidence = row['avg_confidence'] or 0.0
+            else:
+                avg_confidence = row[0] if row and row[0] else 0.0
+            
+            # Fraud attempts
+            if self.db_type == "sqlite":
+                date_func = "date(timestamp)"
+            else:
+                date_func = "DATE(timestamp)"
+            
+            cursor.execute(f"""
+                SELECT COUNT(*) as fraud_count
+                FROM fraud_attempts
+                WHERE {date_func} = {param}
+            """, (date,))
+            row = cursor.fetchone()
+            if self.db_type == "sqlite":
+                fraud_count = row['fraud_count']
+            else:
+                fraud_count = row[0] if row else 0
+            
+            return {
+                "date": date,
+                "total_present": total_present,
+                "by_classroom": by_classroom,
+                "avg_face_confidence": round(avg_confidence, 2),
+                "fraud_attempts": fraud_count
+            }
+
 
 
 class SQLiteDatabase(DatabaseBase):
