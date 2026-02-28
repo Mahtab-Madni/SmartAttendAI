@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libopenblas-dev \
     liblapack-dev \
-    libatlas-base-dev \
     gfortran \
     && rm -rf /var/lib/apt/lists/*
 
