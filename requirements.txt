@@ -8,8 +8,7 @@ cmake==3.27.6
 dlib==19.24.2
 
 # Deep Learning
-tensorflow==2.13.0
-keras==2.13.1
+tensorflow==2.15.0
 
 # Web Framework
 fastapi==0.100.0
