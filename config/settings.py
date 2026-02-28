@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Base Paths
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 MODELS_DIR = BASE_DIR / "models"
 LOGS_DIR = DATA_DIR / "logs"
@@ -84,8 +84,13 @@ VOICE_CONFIG = {
 }
 
 # Database Settings
-DATABASE_TYPE = os.getenv("DATABASE_TYPE", "sqlite")  # Options: 'sqlite', 'postgresql'
+DATABASE_TYPE = os.getenv("DATABASE_TYPE", "sqlite").lower()  # Options: 'sqlite', 'postgresql'
 DATABASE_URL = os.getenv("DATABASE_URL")  # Only needed for PostgreSQL
+
+# Validate PostgreSQL configuration if using PostgreSQL
+if DATABASE_TYPE == "postgresql" and not DATABASE_URL:
+    print("[WARNING] DATABASE_TYPE=postgresql but DATABASE_URL not set. Falling back to SQLite.")
+    DATABASE_TYPE = "sqlite"
 
 DATABASE_CONFIG = {
     "TYPE": DATABASE_TYPE,
@@ -101,14 +106,22 @@ API_KEYS = {
 
 # Notification Settings
 NOTIFICATION_CONFIG = {
-    "TELEGRAM_ENABLED": True,
+    "TELEGRAM_ENABLED": os.getenv("TELEGRAM_ENABLED", "True").lower() == "true",
 }
 
 # Server Settings
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+# Validate SECRET_KEY in production
+if ENVIRONMENT == "production" and (not SECRET_KEY or SECRET_KEY == "your-secret-key-change-this-in-production"):
+    raise ValueError("SECRET_KEY must be set and unique in production environment!")
+
 SERVER_CONFIG = {
-    "HOST": "0.0.0.0",
-    "PORT": 8000,
-    "DEBUG": True,
+    "HOST": os.getenv("SERVER_HOST", "0.0.0.0"),
+    "PORT": int(os.getenv("SERVER_PORT", "8000")),
+    "DEBUG": DEBUG,
     "RELOAD": False,  # Disabled to prevent multiprocessing conflicts with dlib/face_recognition
 }
 

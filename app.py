@@ -179,6 +179,36 @@ async def shutdown_event():
     sync_service.stop()
 
 
+# Health Check Endpoint (for Railway deployment monitoring)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for deployment monitoring"""
+    try:
+        # Check database connection
+        if db.db_type == "postgresql":
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+        else:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+        
+        return {
+            "status": "healthy",
+            "version": "1.0.0",
+            "database": db.db_type,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"[HEALTH] Health check failed: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }, 500
+
+
 # Routes
 
 @app.get("/emotion-analytics", response_class=HTMLResponse)
