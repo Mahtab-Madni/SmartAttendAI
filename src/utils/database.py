@@ -110,9 +110,29 @@ class DatabaseBase:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 param = "?" if self.db_type == "sqlite" else "%s"
+                
+                # Try UPDATE first
                 cursor.execute(f"""
                     UPDATE students SET face_encodings = {param} WHERE student_id = {param}
                 """, (encodings_json, student_id))
+                
+                # If no rows were updated, the student might not have been added yet
+                # Log this but don't fail - the encoding will be saved when student is added
+                if cursor.rowcount == 0:
+                    print(f"[DB] Warning: Could not update face encodings for student {student_id} - student may not exist yet")
+                    # Try to log for debugging
+                    try:
+                        # Check if student exists
+                        cursor.execute(f"SELECT student_id FROM students WHERE student_id = {param}", (student_id,))
+                        if cursor.fetchone() is None:
+                            print(f"[DB] Confirmed: Student {student_id} does not exist in database yet")
+                        else:
+                            print(f"[DB] Student {student_id} exists but UPDATE affected 0 rows")
+                    except:
+                        pass
+                else:
+                    print(f"[DB] Successfully saved face encodings for student {student_id}")
+                
                 return cursor.rowcount > 0
         except Exception as e:
             print(f"Error saving face encodings: {e}")

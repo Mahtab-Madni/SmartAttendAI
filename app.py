@@ -696,7 +696,10 @@ async def register_student(
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         cv2.imwrite(photo_path, img)
         
-        # Register face
+        # IMPORTANT: Add student to database FIRST so encodings can be saved
+        db.add_student(student_id, name, roll_number, email, phone, telegram_id)
+        
+        # Register face - this will save encodings to the database
         success = face_system.register_face(
             image_path=photo_path,
             student_name=name,
@@ -707,9 +710,6 @@ async def register_student(
         )
         
         if success:
-            # Add to database with telegram_id
-            db.add_student(student_id, name, roll_number, email, phone, telegram_id)
-            
             return {
                 "success": True,
                 "message": f"Student {name} registered successfully"
