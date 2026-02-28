@@ -216,8 +216,8 @@ class FaceRecognitionSystem:
             # Save face encodings to database if db instance is available
             if self.db:
                 import json as json_module
-                encodings_list = [enc.tolist() if isinstance(enc, np.ndarray) else enc 
-                                 for enc in self.known_encodings]
+                # Save only this student's encoding, not all known encodings
+                encodings_list = [face_encoding.tolist() if isinstance(face_encoding, np.ndarray) else face_encoding]
                 encodings_json = json_module.dumps(encodings_list)
                 self.db.save_face_encodings(student_id, encodings_json)
                 print(f"[DB] Face encodings saved for student {student_id}")
