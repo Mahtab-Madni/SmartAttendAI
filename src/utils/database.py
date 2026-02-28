@@ -102,6 +102,64 @@ class DatabaseBase:
             print(f"Error deleting student: {e}")
             return False
     
+    # Face Encoding Operations
+    
+    def save_face_encodings(self, student_id: str, encodings_json: str) -> bool:
+        """Save face encodings for a student as JSON string"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                param = "?" if self.db_type == "sqlite" else "%s"
+                cursor.execute(f"""
+                    UPDATE students SET face_encodings = {param} WHERE student_id = {param}
+                """, (encodings_json, student_id))
+                return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error saving face encodings: {e}")
+            return False
+    
+    def get_face_encodings(self, student_id: str) -> Optional[str]:
+        """Get face encodings for a student"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                param = "?" if self.db_type == "sqlite" else "%s"
+                cursor.execute(f"SELECT face_encodings FROM students WHERE student_id = {param}", (student_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    if self.db_type == "sqlite":
+                        return row['face_encodings']
+                    else:
+                        return row[0]
+                return None
+        except Exception as e:
+            print(f"Error getting face encodings: {e}")
+            return None
+    
+    def get_all_face_encodings(self) -> Dict[str, str]:
+        """Get all face encodings for active students"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                active = "1" if self.db_type == "sqlite" else "TRUE"
+                cursor.execute(f"""
+                    SELECT student_id, face_encodings FROM students 
+                    WHERE is_active = {active} AND face_encodings IS NOT NULL
+                """)
+                
+                encodings_dict = {}
+                for row in cursor.fetchall():
+                    if self.db_type == "sqlite":
+                        encodings_dict[row['student_id']] = row['face_encodings']
+                    else:
+                        encodings_dict[row[0]] = row[1]
+                
+                return encodings_dict
+        except Exception as e:
+            print(f"Error getting all face encodings: {e}")
+            return {}
+    
     # Admin Operations
     
     def create_admin_user(self, username: str, email: str, full_name: str, password_hash: str) -> bool:
@@ -574,6 +632,7 @@ class SQLiteDatabase(DatabaseBase):
                     email TEXT,
                     phone TEXT,
                     telegram_id TEXT,
+                    face_encodings TEXT,
                     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     is_active BOOLEAN DEFAULT 1
                 )
@@ -730,6 +789,7 @@ class PostgreSQLDatabase(DatabaseBase):
                 email VARCHAR(255),
                 phone VARCHAR(20),
                 telegram_id VARCHAR(255),
+                face_encodings TEXT,
                 registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_active BOOLEAN DEFAULT TRUE
             )

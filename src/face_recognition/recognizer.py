@@ -16,10 +16,11 @@ import face_recognition
 print("Loading face recognition with face_recognition library...")
 
 class FaceRecognitionSystem:
-    def __init__(self, config, database_path: str = "data/faces"):
+    def __init__(self, config, database_path: str = "data/faces", db_instance=None):
         self.config = config
         self.database_path = Path(database_path)
         self.database_path.mkdir(parents=True, exist_ok=True)
+        self.db = db_instance  # Database instance for saving encodings
         
         self.known_encodings = []
         self.known_metadata = []  # Store name, id, etc.
@@ -146,6 +147,15 @@ class FaceRecognitionSystem:
             
             # Save to disk
             self.save_database()
+            
+            # Save face encodings to database if db instance is available
+            if self.db:
+                import json as json_module
+                encodings_list = [enc.tolist() if isinstance(enc, np.ndarray) else enc 
+                                 for enc in self.known_encodings]
+                encodings_json = json_module.dumps(encodings_list)
+                self.db.save_face_encodings(student_id, encodings_json)
+                print(f"[DB] Face encodings saved for student {student_id}")
             
             print(f"Successfully registered: {student_name} (ID: {student_id})")
             return True

@@ -50,7 +50,7 @@ db = AttendanceDatabase()
 emotion_analytics = EmotionAnalyticsService(db)
 emotion_detector = SimpleEmotionDetector()
 fraud_alert_service = FraudAlertService(db)
-face_system = FaceRecognitionSystem(FACE_CONFIG)
+face_system = FaceRecognitionSystem(FACE_CONFIG, db_instance=db)
 geofence_validator = GeofenceValidator(GEOFENCE_CONFIG)
 challenge_validator = ChallengeValidator()
 smart_attend = SmartAttendAI()
@@ -599,6 +599,59 @@ async def get_students():
     """Get list of all registered students"""
     students = db.list_students()
     return {"students": students}
+
+@app.get("/api/students/with-encodings")
+async def get_students_with_encodings():
+    """Get list of students with their face encoding information"""
+    students = db.list_students()
+    
+    # Add face encoding information to each student
+    for student in students:
+        encodings_json = db.get_face_encodings(student['student_id'])
+        if encodings_json:
+            try:
+                import json as json_module
+                encodings = json_module.loads(encodings_json)
+                student['has_encodings'] = True
+                student['encoding_count'] = len(encodings) if isinstance(encodings, list) else 1
+            except:
+                student['has_encodings'] = False
+                student['encoding_count'] = 0
+        else:
+            student['has_encodings'] = False
+            student['encoding_count'] = 0
+    
+    return {"students": students}
+
+@app.get("/api/students/{student_id}/encodings")
+async def get_student_encodings(student_id: str):
+    """Get face encodings for a specific student"""
+    student = db.get_student(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    encodings_json = db.get_face_encodings(student_id)
+    if not encodings_json:
+        return {
+            "student_id": student_id,
+            "student_name": student.get('name'),
+            "has_encodings": False,
+            "encoding_count": 0
+        }
+    
+    try:
+        import json as json_module
+        encodings = json_module.loads(encodings_json)
+        return {
+            "student_id": student_id,
+            "student_name": student.get('name'),
+            "has_encodings": True,
+            "encoding_count": len(encodings) if isinstance(encodings, list) else 1,
+            "encoding_data_size": len(encodings_json),
+            "saved_at": student.get('registered_at')
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving encodings: {str(e)}")
 
 @app.delete("/api/students/{student_id}")
 async def delete_student(student_id: str):
@@ -1469,7 +1522,8 @@ async def get_recent_attendance(limit: int = 10):
     try:
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            # Use literal limit value to support both SQLite and PostgreSQL
+            cursor.execute(f"""
                 SELECT 
                     a.student_id,
                     s.name as student_name,
@@ -1480,8 +1534,8 @@ async def get_recent_attendance(limit: int = 10):
                 FROM attendance a
                 JOIN students s ON a.student_id = s.student_id
                 ORDER BY a.timestamp DESC
-                LIMIT ?
-            """, (limit,))
+                LIMIT {limit}
+            """)
             
             records = []
             for row in cursor.fetchall():
