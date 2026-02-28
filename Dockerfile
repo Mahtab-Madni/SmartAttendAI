@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Install system dependencies required for OpenCV, dlib, and face-recognition
 RUN apt-get update && apt-get install -y \
-    cmake \
     build-essential \
     pkg-config \
     libsm6 \
@@ -17,6 +16,8 @@ RUN apt-get update && apt-get install -y \
     libopenblas-dev \
     liblapack-dev \
     gfortran \
+    libgl1-mesa-glx \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
