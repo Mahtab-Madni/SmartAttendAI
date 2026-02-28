@@ -32,6 +32,34 @@ class FaceRecognitionSystem:
     
     def load_database(self):
         """Load existing face encodings and metadata"""
+        # Check for corrupted pickle files and remove them
+        if self.encodings_file.exists():
+            try:
+                with open(self.encodings_file, 'rb') as f:
+                    pickle.load(f)
+            except (ModuleNotFoundError, pickle.UnpicklingError, EOFError, ValueError) as e:
+                # Pickle file is corrupted - remove it and start fresh
+                print(f"[LOAD] Pickle file corrupted ({type(e).__name__}): {e}")
+                try:
+                    self.encodings_file.unlink()
+                    print(f"[LOAD] Removed corrupted pickle file: {self.encodings_file}")
+                except Exception as delete_err:
+                    print(f"[LOAD] Error removing corrupted pickle: {delete_err}")
+        
+        if self.metadata_file.exists():
+            try:
+                with open(self.metadata_file, 'r') as f:
+                    json.load(f)
+            except (json.JSONDecodeError, ValueError) as e:
+                # JSON file is corrupted - remove it
+                print(f"[LOAD] Metadata file corrupted: {e}")
+                try:
+                    self.metadata_file.unlink()
+                    print(f"[LOAD] Removed corrupted metadata file: {self.metadata_file}")
+                except Exception as delete_err:
+                    print(f"[LOAD] Error removing corrupted metadata: {delete_err}")
+        
+        # Now try to load the files if they exist and are valid
         if self.encodings_file.exists() and self.metadata_file.exists():
             try:
                 with open(self.encodings_file, 'rb') as f:
@@ -72,16 +100,53 @@ class FaceRecognitionSystem:
                 self.known_encodings = valid_encodings
                 self.known_metadata = valid_metadata
                 
-                print(f"Loaded {len(self.known_encodings)} valid face encodings from database (cleaned {len(loaded_encodings) - len(self.known_encodings)} invalid)")
+                print(f"[LOAD] Loaded {len(self.known_encodings)} valid face encodings from files")
             
-            except (ModuleNotFoundError, pickle.UnpicklingError, EOFError) as e:
+            except Exception as e:
                 # Pickle file is corrupted or incompatible - start fresh
-                print(f"[LOAD] Pickle file corrupted/incompatible ({type(e).__name__}): {e}")
-                print("[LOAD] Starting fresh with empty database")
+                print(f"[LOAD] Failed to load pickle/metadata ({type(e).__name__}): {e}")
+                print("[LOAD] Starting fresh with empty in-memory database")
                 self.known_encodings = []
                 self.known_metadata = []
         else:
             print("No existing database found. Starting fresh.")
+        
+        # Load additional encodings from database if available
+        if self.db:
+            self.load_encodings_from_database()
+    
+    def load_encodings_from_database(self):
+        """Load face encodings from PostgreSQL/SQLite database as backup source"""
+        try:
+            import json as json_module
+            
+            # Get all face encodings from database
+            all_encodings = self.db.get_all_face_encodings()
+            
+            if all_encodings:
+                print(f"[LOAD] Loading {len(all_encodings)} face encodings from database")
+                
+                for student_id, encodings_json in all_encodings.items():
+                    try:
+                        encodings_list = json_module.loads(encodings_json)
+                        if isinstance(encodings_list, list) and len(encodings_list) > 0:
+                            # Use the first encoding for now
+                            encoding_data = encodings_list[0]
+                            encoding = np.array(encoding_data, dtype=np.float64)
+                            
+                            # Verify encoding shape
+                            if encoding.shape == (128,):
+                                self.known_encodings.append(encoding)
+                                self.known_metadata.append({
+                                    "id": student_id,
+                                    "source": "database"
+                                })
+                    except Exception as e:
+                        print(f"[LOAD] Error loading encoding for student {student_id}: {e}")
+                
+                print(f"[LOAD] Loaded {len(all_encodings)} encodings from database into memory")
+        except Exception as e:
+            print(f"[LOAD] Could not load encodings from database: {e}")
     
     def save_database(self):
         """Save face encodings and metadata to disk"""

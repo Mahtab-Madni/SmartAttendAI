@@ -68,3 +68,11 @@ chromedriver*
 *.h5
 *.pt
 *.ckpt
+*.pkl
+*.pickle
+
+# Face encoding database and cache files
+data/faces/
+data/logs/
+data/*.db
+config/data/
