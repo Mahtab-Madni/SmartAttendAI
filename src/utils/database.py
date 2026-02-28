@@ -246,14 +246,22 @@ class DatabaseBase:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 param = "?" if self.db_type == "sqlite" else "%s"
-                params = (param,) * 10
-                cursor.execute(f"""
+                
+                # Convert boolean for database compatibility
+                if self.db_type == "sqlite":
+                    liveness_bool = 1 if liveness_verified else 0
+                else:  # PostgreSQL
+                    liveness_bool = "TRUE" if liveness_verified else "FALSE"
+                
+                query = f"""
                     INSERT INTO attendance 
                     (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
                      liveness_verified, face_confidence, emotion)
-                    VALUES ({', '.join(params)})
-                """, (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
-                      liveness_verified, face_confidence, emotion))
+                    VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {liveness_bool}, {param}, {param})
+                """
+                
+                cursor.execute(query, (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
+                      face_confidence, emotion))
                 return True
         except Exception as e:
             print(f"Error adding attendance: {e}")
@@ -453,14 +461,23 @@ class DatabaseBase:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 param = "?" if self.db_type == "sqlite" else "%s"
-                params = (param,) * 11
-                cursor.execute(f"""
+                
+                # Convert boolean to appropriate type for database
+                if self.db_type == "sqlite":
+                    liveness_bool = 1 if liveness_verified else 0
+                else:  # PostgreSQL
+                    liveness_bool = "TRUE" if liveness_verified else "FALSE"
+                
+                # Build INSERT query with proper boolean handling
+                query = f"""
                     INSERT INTO attendance (
                         student_id, classroom, timestamp, date, time,
                         latitude, longitude, gps_accuracy,
                         liveness_verified, face_confidence, emotion
-                    ) VALUES ({', '.join(params)})
-                """, (
+                    ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {liveness_bool}, {param}, {param})
+                """
+                
+                cursor.execute(query, (
                     student_id, 
                     classroom, 
                     now.isoformat(),
@@ -469,7 +486,6 @@ class DatabaseBase:
                     latitude, 
                     longitude, 
                     gps_accuracy,
-                    1 if liveness_verified else 0,
                     face_confidence, 
                     emotion
                 ))
