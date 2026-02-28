@@ -32,45 +32,53 @@ class FaceRecognitionSystem:
     def load_database(self):
         """Load existing face encodings and metadata"""
         if self.encodings_file.exists() and self.metadata_file.exists():
-            with open(self.encodings_file, 'rb') as f:
-                loaded_encodings = pickle.load(f)
-            
-            with open(self.metadata_file, 'r') as f:
-                self.known_metadata = json.load(f)
-            
-            # Validate and clean encodings - ensure they're all proper numpy arrays
-            valid_encodings = []
-            valid_metadata = []
-            
-            for idx, encoding in enumerate(loaded_encodings):
-                try:
-                    # Convert to numpy array if needed
-                    if isinstance(encoding, list):
-                        encoding = np.array(encoding, dtype=np.float64)
-                    elif not isinstance(encoding, np.ndarray):
-                        print(f"[LOAD] Skipping encoding {idx}: Wrong type {type(encoding)}")
+            try:
+                with open(self.encodings_file, 'rb') as f:
+                    loaded_encodings = pickle.load(f)
+                
+                with open(self.metadata_file, 'r') as f:
+                    self.known_metadata = json.load(f)
+                
+                # Validate and clean encodings - ensure they're all proper numpy arrays
+                valid_encodings = []
+                valid_metadata = []
+                
+                for idx, encoding in enumerate(loaded_encodings):
+                    try:
+                        # Convert to numpy array if needed
+                        if isinstance(encoding, list):
+                            encoding = np.array(encoding, dtype=np.float64)
+                        elif not isinstance(encoding, np.ndarray):
+                            print(f"[LOAD] Skipping encoding {idx}: Wrong type {type(encoding)}")
+                            continue
+                        
+                        # Check shape - should be (128,)
+                        if encoding.shape != (128,):
+                            print(f"[LOAD] Skipping encoding {idx}: Wrong shape {encoding.shape}, expected (128,)")
+                            continue
+                        
+                        # Ensure float64 type
+                        encoding = encoding.astype(np.float64)
+                        
+                        valid_encodings.append(encoding)
+                        if idx < len(self.known_metadata):
+                            valid_metadata.append(self.known_metadata[idx])
+                        
+                    except Exception as e:
+                        print(f"[LOAD] Error validating encoding {idx}: {e}")
                         continue
-                    
-                    # Check shape - should be (128,)
-                    if encoding.shape != (128,):
-                        print(f"[LOAD] Skipping encoding {idx}: Wrong shape {encoding.shape}, expected (128,)")
-                        continue
-                    
-                    # Ensure float64 type
-                    encoding = encoding.astype(np.float64)
-                    
-                    valid_encodings.append(encoding)
-                    if idx < len(self.known_metadata):
-                        valid_metadata.append(self.known_metadata[idx])
-                    
-                except Exception as e:
-                    print(f"[LOAD] Error validating encoding {idx}: {e}")
-                    continue
+                
+                self.known_encodings = valid_encodings
+                self.known_metadata = valid_metadata
+                
+                print(f"Loaded {len(self.known_encodings)} valid face encodings from database (cleaned {len(loaded_encodings) - len(self.known_encodings)} invalid)")
             
-            self.known_encodings = valid_encodings
-            self.known_metadata = valid_metadata
-            
-            print(f"Loaded {len(self.known_encodings)} valid face encodings from database (cleaned {len(loaded_encodings) - len(self.known_encodings)} invalid)")
+            except (ModuleNotFoundError, pickle.UnpicklingError, EOFError) as e:
+                # Pickle file is corrupted or incompatible - start fresh
+                print(f"[LOAD] Pickle file corrupted/incompatible ({type(e).__name__}): {e}")
+                print("[LOAD] Starting fresh with empty database")
+                self.known_encodings = []
+                self.known_metadata = []
         else:
             print("No existing database found. Starting fresh.")
     
