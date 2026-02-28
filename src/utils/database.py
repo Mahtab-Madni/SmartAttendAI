@@ -250,18 +250,29 @@ class DatabaseBase:
                 # Convert boolean for database compatibility
                 if self.db_type == "sqlite":
                     liveness_bool = 1 if liveness_verified else 0
-                else:  # PostgreSQL
-                    liveness_bool = "TRUE" if liveness_verified else "FALSE"
+                else:  # PostgreSQL - use 'true'/'false' with ::boolean cast
+                    liveness_bool = 'true' if liveness_verified else 'false'
                 
-                query = f"""
-                    INSERT INTO attendance 
-                    (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
-                     liveness_verified, face_confidence, emotion)
-                    VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {liveness_bool}, {param}, {param})
-                """
+                if self.db_type == "sqlite":
+                    query = f"""
+                        INSERT INTO attendance 
+                        (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
+                         liveness_verified, face_confidence, emotion)
+                        VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
+                    """
+                    params = (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
+                              liveness_bool, face_confidence, emotion)
+                else:  # PostgreSQL - use ::boolean cast for safe conversion
+                    query = f"""
+                        INSERT INTO attendance 
+                        (student_id, classroom, date, time, latitude, longitude, gps_accuracy, 
+                         liveness_verified, face_confidence, emotion)
+                        VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}::boolean, {param}, {param})
+                    """
+                    params = (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
+                              liveness_bool, face_confidence, emotion)
                 
-                cursor.execute(query, (student_id, classroom, date, time, latitude, longitude, gps_accuracy,
-                      face_confidence, emotion))
+                cursor.execute(query, params)
                 return True
         except Exception as e:
             print(f"Error adding attendance: {e}")
@@ -465,30 +476,54 @@ class DatabaseBase:
                 # Convert boolean to appropriate type for database
                 if self.db_type == "sqlite":
                     liveness_bool = 1 if liveness_verified else 0
-                else:  # PostgreSQL
-                    liveness_bool = "TRUE" if liveness_verified else "FALSE"
+                else:  # PostgreSQL - convert to SQL boolean literal
+                    liveness_bool = 'true' if liveness_verified else 'false'
                 
                 # Build INSERT query with proper boolean handling
-                query = f"""
-                    INSERT INTO attendance (
-                        student_id, classroom, timestamp, date, time,
-                        latitude, longitude, gps_accuracy,
-                        liveness_verified, face_confidence, emotion
-                    ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {liveness_bool}, {param}, {param})
-                """
+                if self.db_type == "sqlite":
+                    query = f"""
+                        INSERT INTO attendance (
+                            student_id, classroom, timestamp, date, time,
+                            latitude, longitude, gps_accuracy,
+                            liveness_verified, face_confidence, emotion
+                        ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param})
+                    """
+                    params = (
+                        student_id, 
+                        classroom, 
+                        now.isoformat(),
+                        now.date().isoformat(),
+                        now.time().isoformat(),
+                        latitude, 
+                        longitude, 
+                        gps_accuracy,
+                        liveness_bool,
+                        face_confidence, 
+                        emotion
+                    )
+                else:  # PostgreSQL - use ::boolean cast for safe conversion
+                    query = f"""
+                        INSERT INTO attendance (
+                            student_id, classroom, timestamp, date, time,
+                            latitude, longitude, gps_accuracy,
+                            liveness_verified, face_confidence, emotion
+                        ) VALUES ({param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}, {param}::boolean, {param}, {param})
+                    """
+                    params = (
+                        student_id, 
+                        classroom, 
+                        now.isoformat(),
+                        now.date().isoformat(),
+                        now.time().isoformat(),
+                        latitude, 
+                        longitude, 
+                        gps_accuracy,
+                        liveness_bool,
+                        face_confidence, 
+                        emotion
+                    )
                 
-                cursor.execute(query, (
-                    student_id, 
-                    classroom, 
-                    now.isoformat(),
-                    now.date().isoformat(),
-                    now.time().isoformat(),
-                    latitude, 
-                    longitude, 
-                    gps_accuracy,
-                    face_confidence, 
-                    emotion
-                ))
+                cursor.execute(query, params)
                 return True
         except Exception as e:
             print(f"Error marking attendance: {e}")
