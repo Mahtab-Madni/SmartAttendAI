@@ -84,9 +84,13 @@ VOICE_CONFIG = {
 }
 
 # Database Settings
+DATABASE_TYPE = os.getenv("DATABASE_TYPE", "sqlite")  # Options: 'sqlite', 'postgresql'
+DATABASE_URL = os.getenv("DATABASE_URL")  # Only needed for PostgreSQL
+
 DATABASE_CONFIG = {
-    "TYPE": "sqlite",  # Options: 'sqlite', 'firebase'
+    "TYPE": DATABASE_TYPE,
     "SQLITE_PATH": DATA_DIR / "smartattend.db",
+    "DATABASE_URL": DATABASE_URL,  # PostgreSQL connection string
     "FIREBASE_CREDS": BASE_DIR / "config" / "firebase-credentials.json",
 }
 

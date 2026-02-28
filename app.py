@@ -146,6 +146,23 @@ async def startup_event():
     """Initialize background tasks on app startup"""
     print("[APP] Starting SmartAttendAI...")
     
+    # Ensure database tables are created (runs _initialize_database if needed)
+    try:
+        # Test database connection
+        if db.db_type == "postgresql":
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                print("[DB] PostgreSQL connection verified")
+        else:
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                print("[DB] SQLite connection verified")
+    except Exception as e:
+        print(f"[DB] Database connection error: {e}")
+        raise
+    
     # Start the background sync service
     if OFFLINE_CONFIG.get("ENABLED"):
         print("[STARTUP] Starting offline sync service...")
