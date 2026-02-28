@@ -1,50 +1,55 @@
 # Core Dependencies
-opencv-python
-opencv-contrib-python
-face-recognition
-numpy
-scipy
-cmake
-dlib
+opencv-python==4.8.1.78
+opencv-contrib-python==4.8.1.78
+face-recognition==1.3.5
+numpy==1.24.3
+scipy==1.11.4
+cmake==3.27.6
+dlib==19.24.2
 
 # Deep Learning
-tensorflow
-keras
-torch
-torchvision
+tensorflow==2.13.0
+keras==2.13.1
+torch==2.0.1
+torchvision==0.15.2
 
 # Web Framework
-fastapi
-uvicorn[standard]
-python-multipart
-jinja2
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+jinja2==3.1.2
 
 # Database
-sqlalchemy
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
 
 # Geolocation
-geopy
-geocoder
+geopy==2.3.0
+geocoder==1.38.1
 
 # Image Processing
-Pillow
-scikit-image
-imutils
+Pillow==10.1.0
+scikit-image==0.21.0
+imutils==0.5.4
 
 # Communication APIs
-python-telegram-bot
+python-telegram-bot==20.3
 
 # Utilities
-python-dotenv
-pydantic
-pandas
-matplotlib
-requests
-aiofiles
+python-dotenv==1.0.0
+pydantic==2.5.0
+pandas==2.1.3
+matplotlib==3.8.2
+requests==2.31.0
+aiofiles==23.2.1
 
 # Testing
-pytest
-pytest-asyncio
+pytest==7.4.3
+pytest-asyncio==0.21.1
 
 # Security
-itsdangerous
+itsdangerous==2.1.2
+
+# Production Server
+gunicorn==21.2.0
