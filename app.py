@@ -710,9 +710,17 @@ async def register_student(
         )
         
         if success:
+            # Force reload of face encodings from database to verify persistence
+            print("[REGISTER] Reloading face encodings from database...")
+            face_system.known_encodings.clear()
+            face_system.known_metadata.clear()
+            face_system.load_encodings_from_database()
+            print(f"[REGISTER] Total known encodings after reload: {len(face_system.known_encodings)}")
+            
             return {
                 "success": True,
-                "message": f"Student {name} registered successfully"
+                "message": f"Student {name} registered successfully",
+                "encodings_loaded": len(face_system.known_encodings)
             }
         else:
             return {
@@ -721,6 +729,9 @@ async def register_student(
             }
     
     except Exception as e:
+        import traceback
+        print(f"[REGISTER] Error: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/recognize-face")
