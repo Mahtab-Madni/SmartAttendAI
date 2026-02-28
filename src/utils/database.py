@@ -223,14 +223,29 @@ class DatabaseBase:
                 columns = [desc[0] for desc in cursor.description]
                 return [dict(zip(columns, row)) for row in cursor.fetchall()]
     
-    def get_attendance_by_date(self, date: str) -> List[Dict]:
-        """Get attendance by date"""
+    def get_attendance_by_date(self, date: str, classroom: Optional[str] = None) -> List[Dict]:
+        """Get attendance by date, optionally filtered by classroom"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             param = "?" if self.db_type == "sqlite" else "%s"
-            cursor.execute(f"""
-                SELECT * FROM attendance WHERE date = {param} ORDER BY timestamp DESC
-            """, (date,))
+            
+            if classroom:
+                if self.db_type == "sqlite":
+                    cursor.execute(f"""
+                        SELECT * FROM attendance 
+                        WHERE date = {param} AND classroom = {param}
+                        ORDER BY timestamp DESC
+                    """, (date, classroom))
+                else:
+                    cursor.execute(f"""
+                        SELECT * FROM attendance 
+                        WHERE date = {param} AND classroom = {param}
+                        ORDER BY timestamp DESC
+                    """, (date, classroom))
+            else:
+                cursor.execute(f"""
+                    SELECT * FROM attendance WHERE date = {param} ORDER BY timestamp DESC
+                """, (date,))
             
             if self.db_type == "sqlite":
                 return [dict(row) for row in cursor.fetchall()]
