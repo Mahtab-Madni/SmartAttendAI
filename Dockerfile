@@ -11,13 +11,12 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender-dev \
+    libxrender1 \
     libgomp1 \
     libglib2.0-0 \
     libopenblas-dev \
     liblapack-dev \
     gfortran \
-    libgl1-mesa-glx \
-    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
@@ -36,6 +35,8 @@ EXPOSE 8000
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV OPENCV_VIDEOIO_DEBUG=0
+ENV QT_QPA_PLATFORM=offscreen
 
 # Run the application using Python startup wrapper
 CMD ["python", "run.py"]
