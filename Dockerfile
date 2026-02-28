@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Install system dependencies required for OpenCV, dlib, and face-recognition
 RUN apt-get update && apt-get install -y \
+    cmake \
     build-essential \
     pkg-config \
     libsm6 \
