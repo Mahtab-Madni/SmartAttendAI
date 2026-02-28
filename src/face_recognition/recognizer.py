@@ -120,8 +120,14 @@ class FaceRecognitionSystem:
         try:
             import json as json_module
             
+            # Check if db instance exists
+            if not self.db:
+                print("[LOAD] No database instance provided - skipping database encoding load")
+                return
+            
             # Get all face encodings from database
             all_encodings = self.db.get_all_face_encodings()
+            print(f"[LOAD] Database query returned {len(all_encodings)} students with encodings")
             
             if all_encodings:
                 print(f"[LOAD] Loading {len(all_encodings)} face encodings from database")
@@ -137,16 +143,29 @@ class FaceRecognitionSystem:
                             # Verify encoding shape
                             if encoding.shape == (128,):
                                 self.known_encodings.append(encoding)
-                                self.known_metadata.append({
-                                    "id": student_id,
-                                    "source": "database"
-                                })
+                                # Get student info from database for complete metadata
+                                student_info = self.db.get_student(student_id)
+                                if student_info:
+                                    self.known_metadata.append(student_info)
+                                else:
+                                    self.known_metadata.append({
+                                        "id": student_id,
+                                        "name": f"Student {student_id}",
+                                        "source": "database"
+                                    })
+                                print(f"[LOAD] ✓ Loaded encoding for student {student_id}")
+                            else:
+                                print(f"[LOAD] Skipping student {student_id}: wrong encoding shape {encoding.shape}")
                     except Exception as e:
                         print(f"[LOAD] Error loading encoding for student {student_id}: {e}")
                 
-                print(f"[LOAD] Loaded {len(all_encodings)} encodings from database into memory")
+                print(f"[LOAD] Successfully loaded {len(self.known_encodings)} encodings from database")
+            else:
+                print("[LOAD] No face encodings found in database")
         except Exception as e:
-            print(f"[LOAD] Could not load encodings from database: {e}")
+            print(f"[LOAD] Error loading encodings from database: {e}")
+            import traceback
+            traceback.print_exc()
     
     def save_database(self):
         """Save face encodings and metadata to disk"""
