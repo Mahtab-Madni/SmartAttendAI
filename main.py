@@ -8,6 +8,7 @@ from datetime import datetime
 import sys
 import os
 import asyncio
+from pathlib import Path
 
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -35,7 +36,10 @@ class SmartAttendAI:
         
         # Initialize core modules
         self.liveness_detector = LivenessDetector(LIVENESS_CONFIG)
-        self.texture_analyzer = TextureAnalyzer(model_path="models/spoof_detection_model.h5")
+        # Use absolute path for spoof detection model
+        project_root = Path(__file__).parent
+        spoof_model_path = project_root / "models" / "spoof_detection_model.h5"
+        self.texture_analyzer = TextureAnalyzer(model_path=str(spoof_model_path))
         self.challenge_verifier = ChallengeResponseVerifier(FRAUD_CONFIG["CHALLENGES"])
         
         self.face_system = FaceRecognitionSystem(FACE_CONFIG)

@@ -257,10 +257,10 @@ class DatabaseBase:
         """Get recent attendance"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            param = "?" if self.db_type == "sqlite" else "%s"
+            # Use limit directly - PostgreSQL doesn't support parameterized LIMIT
             cursor.execute(f"""
-                SELECT * FROM attendance ORDER BY timestamp DESC LIMIT {param}
-            """, (limit,))
+                SELECT * FROM attendance ORDER BY timestamp DESC LIMIT {limit}
+            """)
             
             if self.db_type == "sqlite":
                 return [dict(row) for row in cursor.fetchall()]

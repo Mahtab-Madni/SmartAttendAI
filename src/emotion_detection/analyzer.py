@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import json
 import os
+from pathlib import Path
 
 try:
     import tensorflow as tf
@@ -47,12 +48,14 @@ class EmotionAnalyzer:
         """
         try:
             if KERAS_AVAILABLE:
-                model_path = "models/emotion_model.h5"
+                # Use absolute path relative to project root
+                project_root = Path(__file__).parent.parent.parent
+                model_path = project_root / "models" / "emotion_model.h5"
                 # In production, download model from:
                 # https://github.com/oarriaga/face_classification
                 # Or train your own on FER2013 dataset
-                if os.path.exists(model_path):
-                    return load_model(model_path)
+                if model_path.exists():
+                    return load_model(str(model_path))
                 else:
                     print(f"Emotion model not found at {model_path}")
                     print("Using fallback emotion detection")

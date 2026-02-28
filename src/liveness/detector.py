@@ -10,6 +10,7 @@ from imutils import face_utils
 import time
 from typing import Tuple, Optional
 import os
+from pathlib import Path
 
 class LivenessDetector:
     def __init__(self, config):
@@ -29,11 +30,14 @@ class LivenessDetector:
         # Try to load the shape predictor, but make it optional
         self.predictor = None
         try:
-            if os.path.exists("models/shape_predictor_68_face_landmarks.dat"):
-                self.predictor = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
+            # Use absolute path relative to project root
+            project_root = Path(__file__).parent.parent.parent
+            predictor_path = project_root / "models" / "shape_predictor_68_face_landmarks.dat"
+            if predictor_path.exists():
+                self.predictor = dlib.shape_predictor(str(predictor_path))
                 print("[LIVENESS] Shape predictor loaded successfully")
             else:
-                print("[LIVENESS] Warning: Shape predictor not found at models/shape_predictor_68_face_landmarks.dat")
+                print(f"[LIVENESS] Warning: Shape predictor not found at {predictor_path}")
                 print("[LIVENESS] Liveness detection will use fallback methods")
         except Exception as e:
             print(f"[LIVENESS] Warning: Could not load shape predictor: {e}")
@@ -182,11 +186,17 @@ class TextureAnalyzer:
         """Load pre-trained CNN model for spoof detection"""
         try:
             import tensorflow as tf
-            if model_path and os.path.exists(model_path):
-                return tf.keras.models.load_model(model_path)
+            if model_path:
+                # Convert to Path object for better path handling
+                model_path_obj = Path(model_path)
+                if model_path_obj.exists():
+                    return tf.keras.models.load_model(str(model_path_obj))
+                else:
+                    # Return None if model not available
+                    # In production, train this model using real/fake face dataset
+                    print(f"Warning: Texture analysis model not found at {model_path}. Using basic checks.")
+                    return None
             else:
-                # Return None if model not available
-                # In production, train this model using real/fake face dataset
                 print("Warning: Texture analysis model not found. Using basic checks.")
                 return None
         except Exception as e:
