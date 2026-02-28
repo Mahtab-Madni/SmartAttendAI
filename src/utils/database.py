@@ -795,6 +795,11 @@ class PostgreSQLDatabase(DatabaseBase):
             )
         """)
         
+        # Add face_encodings column if it doesn't exist (migration for existing databases)
+        self._execute_safe("""
+            ALTER TABLE students ADD COLUMN IF NOT EXISTS face_encodings TEXT
+        """)
+        
         self._execute_safe("""
             CREATE TABLE IF NOT EXISTS attendance (
                 id SERIAL PRIMARY KEY,
