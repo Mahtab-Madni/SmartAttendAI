@@ -218,128 +218,133 @@ class PostgreSQLDatabase(DatabaseBase):
     
     def _initialize_database(self):
         """Create database tables if they don't exist"""
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            
-            # Students table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS students (
-                    id SERIAL PRIMARY KEY,
-                    student_id VARCHAR(255) UNIQUE NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    roll_number VARCHAR(255) UNIQUE NOT NULL,
-                    email VARCHAR(255),
-                    phone VARCHAR(20),
-                    telegram_id VARCHAR(255),
-                    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    is_active BOOLEAN DEFAULT TRUE
-                )
-            """)
-            
-            # Add columns if they don't exist (migrations)
+        # Helper function to execute statement safely
+        def execute_sql(sql: str, description: str = ""):
             try:
-                cursor.execute("ALTER TABLE students ADD COLUMN telegram_id VARCHAR(255)")
-            except psycopg2.Error:
+                conn = psycopg2.connect(self.database_url)
+                cursor = conn.cursor()
+                cursor.execute(sql)
+                conn.commit()
+                cursor.close()
+                conn.close()
+                if description:
+                    print(f"[DB] {description}")
+            except psycopg2.errors.DuplicateTable:
+                pass  # Table already exists
+            except psycopg2.errors.DuplicateColumn:
                 pass  # Column already exists
-            
-            # Attendance records table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS attendance (
-                    id SERIAL PRIMARY KEY,
-                    student_id VARCHAR(255) NOT NULL,
-                    classroom VARCHAR(255) NOT NULL,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    date DATE NOT NULL,
-                    time TIME NOT NULL,
-                    latitude FLOAT,
-                    longitude FLOAT,
-                    gps_accuracy FLOAT,
-                    liveness_verified BOOLEAN DEFAULT FALSE,
-                    face_confidence FLOAT,
-                    emotion VARCHAR(50),
-                    status VARCHAR(50) DEFAULT 'present',
-                    FOREIGN KEY (student_id) REFERENCES students(student_id)
-                )
-            """)
-            
-            # Fraud attempts table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS fraud_attempts (
-                    id SERIAL PRIMARY KEY,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    student_id VARCHAR(255),
-                    fraud_type VARCHAR(100) NOT NULL,
-                    details TEXT,
-                    image_path VARCHAR(500),
-                    ip_address VARCHAR(50),
-                    latitude FLOAT,
-                    longitude FLOAT,
-                    severity VARCHAR(50) DEFAULT 'medium',
-                    FOREIGN KEY (student_id) REFERENCES students(student_id)
-                )
-            """)
-            
-            # Sessions table (for lecture sessions)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS sessions (
-                    id SERIAL PRIMARY KEY,
-                    session_id VARCHAR(255) UNIQUE NOT NULL,
-                    classroom VARCHAR(255) NOT NULL,
-                    subject VARCHAR(255),
-                    teacher_name VARCHAR(255),
-                    start_time TIMESTAMP NOT NULL,
-                    end_time TIMESTAMP,
-                    total_students INTEGER DEFAULT 0,
-                    present_students INTEGER DEFAULT 0,
-                    engagement_score FLOAT,
-                    emotion_data TEXT
-                )
-            """)
-            
-            # System logs table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS system_logs (
-                    id SERIAL PRIMARY KEY,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    level VARCHAR(50) NOT NULL,
-                    module VARCHAR(100),
-                    message TEXT NOT NULL,
-                    details TEXT
-                )
-            """)
-            
-            # Admin users table
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS admin_users (
-                    id SERIAL PRIMARY KEY,
-                    username VARCHAR(255) UNIQUE NOT NULL,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    full_name VARCHAR(255) NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_login TIMESTAMP
-                )
-            """)
-            
-            # Create indexes for faster queries
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_attendance_student 
-                ON attendance(student_id)
-            """)
-            
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_attendance_date 
-                ON attendance(date)
-            """)
-            
-            cursor.execute("""
-                CREATE INDEX IF NOT EXISTS idx_fraud_timestamp 
-                ON fraud_attempts(timestamp)
-            """)
-            
-            conn.commit()
-            print("[DB] PostgreSQL database initialized successfully")
+            except psycopg2.errors.DuplicateObject:
+                pass  # Index already exists
+            except Exception as e:
+                print(f"[DB] Warning during initialization: {e}")
+        
+        # Execute each CREATE TABLE in separate transaction
+        execute_sql("""
+            CREATE TABLE IF NOT EXISTS students (
+                id SERIAL PRIMARY KEY,
+                student_id VARCHAR(255) UNIQUE NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                roll_number VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(255),
+                phone VARCHAR(20),
+                telegram_id VARCHAR(255),
+                registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE
+            )
+        """, "Created students table")
+        
+        execute_sql("""
+            CREATE TABLE IF NOT EXISTS attendance (
+                id SERIAL PRIMARY KEY,
+                student_id VARCHAR(255) NOT NULL,
+                classroom VARCHAR(255) NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                date DATE NOT NULL,
+                time TIME NOT NULL,
+                latitude FLOAT,
+                longitude FLOAT,
+                gps_accuracy FLOAT,
+                liveness_verified BOOLEAN DEFAULT FALSE,
+                face_confidence FLOAT,
+                emotion VARCHAR(50),
+                status VARCHAR(50) DEFAULT 'present',
+                FOREIGN KEY (student_id) REFERENCES students(student_id)
+            )
+        """, "Created attendance table")
+        
+        execute_sql("""
+            CREATE TABLE IF NOT EXISTS fraud_attempts (
+                id SERIAL PRIMARY KEY,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                student_id VARCHAR(255),
+                fraud_type VARCHAR(100) NOT NULL,
+                details TEXT,
+                image_path VARCHAR(500),
+                ip_address VARCHAR(50),
+                latitude FLOAT,
+                longitude FLOAT,
+                severity VARCHAR(50) DEFAULT 'medium',
+                FOREIGN KEY (student_id) REFERENCES students(student_id)
+            )
+        """, "Created fraud_attempts table")
+        
+        execute_sql("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                id SERIAL PRIMARY KEY,
+                session_id VARCHAR(255) UNIQUE NOT NULL,
+                classroom VARCHAR(255) NOT NULL,
+                subject VARCHAR(255),
+                teacher_name VARCHAR(255),
+                start_time TIMESTAMP NOT NULL,
+                end_time TIMESTAMP,
+                total_students INTEGER DEFAULT 0,
+                present_students INTEGER DEFAULT 0,
+                engagement_score FLOAT,
+                emotion_data TEXT
+            )
+        """, "Created sessions table")
+        
+        execute_sql("""
+            CREATE TABLE IF NOT EXISTS system_logs (
+                id SERIAL PRIMARY KEY,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                level VARCHAR(50) NOT NULL,
+                module VARCHAR(100),
+                message TEXT NOT NULL,
+                details TEXT
+            )
+        """, "Created system_logs table")
+        
+        execute_sql("""
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                full_name VARCHAR(255) NOT NULL,
+                password_hash TEXT NOT NULL,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP
+            )
+        """, "Created admin_users table")
+        
+        # Create indexes
+        execute_sql("""
+            CREATE INDEX IF NOT EXISTS idx_attendance_student 
+            ON attendance(student_id)
+        """, "Created index idx_attendance_student")
+        
+        execute_sql("""
+            CREATE INDEX IF NOT EXISTS idx_attendance_date 
+            ON attendance(date)
+        """, "Created index idx_attendance_date")
+        
+        execute_sql("""
+            CREATE INDEX IF NOT EXISTS idx_fraud_timestamp 
+            ON fraud_attempts(timestamp)
+        """, "Created index idx_fraud_timestamp")
+        
+        print("[DB] PostgreSQL database initialization complete")
 
 
 class AttendanceDatabase:
