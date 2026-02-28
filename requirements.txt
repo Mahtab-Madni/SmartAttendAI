@@ -1,7 +1,7 @@
 # Core Dependencies
 opencv-python==4.8.1.78
 opencv-contrib-python==4.8.1.78
-face-recognition==1.3.5
+face-recognition==1.3.0
 numpy==1.24.3
 scipy==1.11.4
 cmake==3.27.6
