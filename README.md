@@ -625,5 +625,3 @@ I can dedicate **6-8 hours daily** to Acadza's internship, including:
 ---
 
 **Made with ❤️ for smarter, fraud-free education**
-
-*This README serves as my application for the Acadza AI/ML Internship. Looking forward to contributing to India's most personalized JEE/NEET prep platform!*
